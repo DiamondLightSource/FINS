@@ -75,6 +75,11 @@
 #include <byteswap.h>
 #endif
 
+#ifdef vxWorks
+#include <sockLib.h>
+#include <inetLib.h>
+#endif
+
 #include <cantProceed.h>
 #include <epicsMutex.h>
 #include <epicsEvent.h>
@@ -462,8 +467,11 @@ static int finsUDPInit(const char *portName, const char *address)
 	
 		{
 			struct sockaddr_in name;
+#ifdef vxWorks
+			int namelen;
+#else
 			socklen_t namelen;
-			
+#endif			
 			getsockname(pdrvPvt->fd, (struct sockaddr *) &name, &namelen);
 
 			printf("%s: port %d bound\n", FUNCNAME, name.sin_port);
@@ -481,7 +489,7 @@ static int finsUDPInit(const char *portName, const char *address)
 		port number is the same as our receive port number. The PLC will sends its
 		reply to the same port number as we use for transmitting.
 	*/
-		if (inet_aton(address, &pdrvPvt->addr.sin_addr) == 0)
+		if (inet_aton((char *) address, &pdrvPvt->addr.sin_addr) == 0)
 		{
 			printf("Bad IP address %s\n", address);
 			return (-1);
