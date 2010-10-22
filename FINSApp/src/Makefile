@@ -12,7 +12,7 @@ LIBRARY_IOC += FINS
 DBD += finsUDP.dbd
 
 # The following are compiled and added to the support library
-FINS_SRCS += finsUDP
+FINS_SRCS += finsUDP.c
 
 # We need to link against the EPICS Base libraries
 FINS_LIBS += $(EPICS_BASE_IOC_LIBS)
