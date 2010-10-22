@@ -1075,7 +1075,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 
 				if (transfered)
 				{
-					*transfered = 1;
+					*transfered = 3;
 				}
 			}
 			
