@@ -485,7 +485,7 @@ static int finsUDPInit(const char *portName, const char *address)
 		pdrvPvt->addr.sin_port = htons(FINS_UDP_PORT);
 
 	/*
-		We will send on the same socket as we transmit. This means that our transmit
+		We will send on the same socket as we receive. This means that our transmit
 		port number is the same as our receive port number. The PLC will sends its
 		reply to the same port number as we use for transmitting.
 	*/
