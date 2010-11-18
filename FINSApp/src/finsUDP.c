@@ -177,8 +177,6 @@ typedef struct drvPvt
 	size_t nbytes;
 	size_t msize;
 
-	size_t timeout;
-
 	epicsUInt8 sid;			/* seesion id - increment for each message */
 	
 	struct sockaddr_in addr;	/* PLC destination address */
@@ -282,8 +280,6 @@ static int finsUDPInit(const char *portName, const char *address)
 	
 	pdrvPvt = callocMustSucceed(1, sizeof(drvPvt), FUNCNAME);
 	pdrvPvt->portName = epicsStrDup(portName);
-	
-	pdrvPvt->timeout = FINS_TIMEOUT;
 	
 	pasynOctet = callocMustSucceed(1, sizeof(asynOctet), FUNCNAME);
 
@@ -847,9 +843,17 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		
 	/* timeout */
 
-		tv.tv_sec = pdrvPvt->timeout;
-		tv.tv_usec = 0;
-		
+		if (pasynUser->timeout > 0.0)
+		{
+			tv.tv_sec = (long) pasynUser->timeout;
+			tv.tv_usec = 0;
+		}
+		else
+		{
+			tv.tv_sec = FINS_TIMEOUT;
+			tv.tv_usec = 0;
+		}
+
 		switch (select(pdrvPvt->fd + 1, &rfds, NULL, NULL, &tv))
 		{
 			case -1:
@@ -1406,8 +1410,16 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		
 	/* timeout */
 
-		tv.tv_sec = pdrvPvt->timeout;
-		tv.tv_usec = 0;
+		if (pasynUser->timeout > 0.0)
+		{
+			tv.tv_sec = (long) pasynUser->timeout;
+			tv.tv_usec = 0;
+		}
+		else
+		{
+			tv.tv_sec = FINS_TIMEOUT;
+			tv.tv_usec = 0;
+		}
 		
 		switch (select(pdrvPvt->fd + 1, &rfds, NULL, NULL, &tv))
 		{
