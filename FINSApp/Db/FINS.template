@@ -74,7 +74,7 @@ record(ai, "$(device):CPU:STATUS")
 
 record(waveform, "$(device):CYCLE")
 {
-	field(DTYP, "asynInt32arrayIn")
+	field(DTYP, "asynInt32ArrayIn")
 	field(INP,  "@asyn($(port), 0, 0) FINS_CYCLE_TIME")
 	field(SCAN, "10 second")
 	field(FTVL, "ULONG")
@@ -259,7 +259,7 @@ record(ai, "$(device):POWERON")
 record(waveform, "$(device):CLOCK")
 {
 	field(DTYP, "asynInt16ArrayIn")
-	field(INP,  "@asyn(PLC, 0, 0) FINS_CLOCK_READ")
+	field(INP,  "@asyn($(port), 0, 0) FINS_CLOCK_READ")
 	field(NELM, "7")
 	field(FTVL, "SHORT")
 	field(SCAN, "10 second")
