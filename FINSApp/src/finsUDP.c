@@ -173,16 +173,10 @@ typedef struct drvPvt
 	uint8_t node;
 	
 	char *debug;
-	char *data;
-	size_t nbytes;
-	size_t msize;
 
 	epicsUInt8 sid;			/* seesion id - increment for each message */
 	
 	struct sockaddr_in addr;	/* PLC destination address */
-	
-	uint8_t reply[FINS_MAX_MSG];	/* incoming message buffer */
-	uint8_t message[FINS_MAX_MSG];	/* message buffer */
 	
 } drvPvt;
 
@@ -270,7 +264,7 @@ enum FINS_COMMANDS
 
 #define FUNCNAME "finsUDPInit"
 
-static int finsUDPInit(const char *portName, const char *address)
+int finsUDPInit(const char *portName, const char *address)
 {
 	drvPvt *pdrvPvt;
 	asynStatus status;
@@ -283,9 +277,7 @@ static int finsUDPInit(const char *portName, const char *address)
 	
 	pasynOctet = callocMustSucceed(1, sizeof(asynOctet), FUNCNAME);
 
-/* a couple of buffers for tx and rx data */
-	
-	pdrvPvt->data = callocMustSucceed(1, 1500, FUNCNAME);
+/* a buffer for debugging */
 	
 	pdrvPvt->debug = callocMustSucceed(1, DEBUG_LEN, FUNCNAME);
 	
@@ -334,9 +326,7 @@ static int finsUDPInit(const char *portName, const char *address)
 	pasynOctet->write = udpWrite;
 	pasynOctet->read = udpRead;
 	pasynOctet->flush = flushIt;
-	pasynOctet->setInputEos = NULL;
-	pasynOctet->getInputEos = NULL;
-	
+
 	pdrvPvt->octet.interfaceType = asynOctetType;
 	pdrvPvt->octet.pinterface = pasynOctet;
 	pdrvPvt->octet.drvPvt = pdrvPvt;
@@ -459,7 +449,7 @@ static int finsUDPInit(const char *portName, const char *address)
 			return (-1);
 		}
 		
-	/* find our port number */
+	/* find our port number and inform the user */
 	
 		{
 			struct sockaddr_in name;
@@ -476,16 +466,18 @@ static int finsUDPInit(const char *portName, const char *address)
 	/* destination port address used later in sendto() */
 
 		bzero((char *) &pdrvPvt->addr, addrlen);
-	
+/*
 		pdrvPvt->addr.sin_family = AF_INET;
 		pdrvPvt->addr.sin_port = htons(FINS_UDP_PORT);
-
+*/
 	/*
 		We will send on the same socket as we receive. This means that our transmit
 		port number is the same as our receive port number. The PLC will sends its
 		reply to the same port number as we use for transmitting.
 	*/
-		if (inet_aton((char *) address, &pdrvPvt->addr.sin_addr) == 0)
+
+		if (aToIPAddr(address, FINS_UDP_PORT, &pdrvPvt->addr) < 0)
+		
 		{
 			printf("Bad IP address %s\n", address);
 			return (-1);
@@ -879,10 +871,18 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		}
 	}
 
-	if ((recvlen = recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, 0, NULL, NULL)) < 0)
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, recvfrom() error\n", pdrvPvt->portName);
-		return (-1);
+		struct sockaddr from_addr;
+#ifdef vxWorks
+		int iFromLen = 0;
+#else
+		socklen_t iFromLen = 0;
+#endif		
+		if ((recvlen = recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen)) < 0)
+		{
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, recvfrom() error.\n", pdrvPvt->portName);
+			return (-1);
+		}
 	}
 #if 0
 	{
@@ -1390,8 +1390,6 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 	}
 #endif
 /* send request */
-
-	errno = 0;
 	
 	if (sendto(pdrvPvt->fd, message, sendlen, 0, (struct sockaddr *) &pdrvPvt->addr, addrlen) != sendlen)
 	{
@@ -1446,10 +1444,18 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		}
 	}
 
-	if ((recvlen = recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, 0, NULL, NULL)) < 0)
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, recvfrom() error\n", pdrvPvt->portName);
-		return (-1);
+		struct sockaddr from_addr;
+#ifdef vxWorks
+		int iFromLen = 0;
+#else
+		socklen_t iFromLen = 0;
+#endif
+		if ((recvlen = recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen)) < 0)
+		{
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, recvfrom() error\n", pdrvPvt->portName);
+			return (-1);
+		}
 	}
 #if 0
 	{
@@ -2347,5 +2353,218 @@ static void finsUDPRegister(void)
 }
 
 epicsExportRegistrar(finsUDPRegister);
+
+/**************************************************************************************************/
+
+/*
+	This is a test function to send a FINS data memory read request for two words from
+	address 100 to the specified IP address. It will print the data received as hex, or
+	a helpful error message if something fails.
+*/
+
+int udpTest(char *address)
+{
+	int fd;
+	struct sockaddr_in addr;
+	const int addrlen = sizeof(struct sockaddr_in);
+	uint8_t node;
+	unsigned char message[FINS_MAX_MSG];
+	int recvlen, sendlen = 0;
+	
+/* open a datagram socket */
+
+	fd = socket(PF_INET, SOCK_DGRAM, 0);
+	
+	if (fd < 0)
+	{
+		perror("socket");
+		return (-1);
+	}
+	
+	bzero((char *) &(addr), addrlen);
+
+/* ask for a free port for incoming UDP packets */
+
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(0);
+
+/* bind socket to address */
+
+	if (bind(fd, (struct sockaddr *) &addr, addrlen) < 0)
+	{
+		perror("bind failed");
+		
+		close(fd);
+		return (-1);
+	}
+
+/* find our port number */
+	
+	{
+		struct sockaddr_in name;
+#ifdef vxWorks
+		int namelen;
+#else
+		socklen_t namelen;
+#endif			
+		getsockname(fd, (struct sockaddr *) &name, &namelen);
+
+		printf("port %d bound\n", name.sin_port);
+	}
+	
+/* destination port address used later in sendto() */
+
+	bzero((char *) &addr, addrlen);
+
+/*
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(FINS_UDP_PORT);
+*/
+
+/* convert IP address */
+
+	if (aToIPAddr(address, FINS_UDP_PORT, &addr) < 0)
+	{
+		close(fd);
+		printf("Bad IP address %s\n", address);
+		return (-1);
+	}
+
+/* node address is last byte of IP address */
+		
+	node = ntohl(addr.sin_addr.s_addr) & 0xff;
+		
+	printf("PLC node %d\n", node);
+
+/* send a simple FINS command */
+
+	message[ICF] = 0x80;
+	message[RSV] = 0x00;
+	message[GCT] = 0x02;
+
+	message[DNA] = 0x00;
+	message[DA1] = node;		/* destination node */
+	message[DA2] = 0x00;
+
+	message[SNA] = 0x00;
+	message[SA1] = 0x01;		/* source node */
+	message[SA2] = 0x00;
+
+	message[MRC] = 0x01;
+	message[SRC] = 0x01;
+	message[COM] = DM;		/* data memory read */
+
+	message[COM+1] = 100 >> 8;
+	message[COM+2] = 100 & 0xff;
+	message[COM+3] = 0x00;		/* start address */
+
+	message[COM+4] = 2 >> 8;
+	message[COM+5] = 2 & 0xff;	/* length */
+
+	sendlen = COM + 6;
+
+/* send request */
+
+	if (sendto(fd, message, sendlen, 0, (struct sockaddr *) &addr, addrlen) != sendlen)
+	{
+		perror("sendto");
+		printf("failed to send complete message\n");
+		close(fd);
+		return (-1);
+	}
+
+/* receive reply with timeout */
+
+	{
+		fd_set rfds;
+		struct timeval tv;
+		
+		FD_ZERO(&rfds);
+		FD_SET(fd, &rfds);
+		
+	/* timeout */
+
+		tv.tv_sec = FINS_TIMEOUT;
+		tv.tv_usec = 0;
+
+		switch (select(fd + 1, &rfds, NULL, NULL, &tv))
+		{
+			case -1:
+			{
+				printf("finsUDPread: select() error = %d\n", -1);
+	
+				return (-1);
+				break;
+			}
+			
+			case 0:
+			{
+				printf("finsUDPread: select() timeout\n");
+
+				return (-1);
+				break;
+			}
+
+			default:
+			{
+				break;
+			}
+		}
+	}
+
+	{
+		struct sockaddr from_addr;
+#ifdef vxWorks
+		int iFromLen = 0;
+#else
+		socklen_t iFromLen = 0;
+#endif
+		if ((recvlen = recvfrom(fd, message, FINS_MAX_MSG, 0, &from_addr, &iFromLen)) < 0)
+		{
+			perror("recvfrom");
+			close(fd);
+			return (-1);
+		}
+	}
+
+	{
+		int i;
+		
+		for (i = 0; i < recvlen; i++)
+		{
+			printf("0x%02x ", message[i]);
+		}
+	
+		puts("");
+	}
+	
+	close(fd);
+	
+	return (0);
+}
+
+static const iocshArg udpTestArg0 = { "IP address", iocshArgString };
+
+static const iocshArg *udpTestArgs[] = { &udpTestArg0};
+static const iocshFuncDef udpTestFuncDef = { "udpTest", 1, udpTestArgs};
+
+static void udpTestCallFunc(const iocshArgBuf *args)
+{
+	udpTest(args[0].sval);
+}
+
+static void udpTestRegister(void)
+{
+	static int firstTime = 1;
+	
+	if (firstTime)
+	{
+		firstTime = 0;
+		iocshRegister(&udpTestFuncDef, udpTestCallFunc);
+	}
+}
+
+epicsExportRegistrar(udpTestRegister);
 
 /**************************************************************************************************/
