@@ -1,2 +1,3 @@
 registrar("finsUDPRegister")
-registrar("udpTestRegister")
+registrar("finsTestRegister")
+registrar("finsTimeRegister")
