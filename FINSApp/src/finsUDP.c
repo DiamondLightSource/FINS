@@ -1014,6 +1014,9 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		case FINS_DM_READ:
 		case FINS_AR_READ:
 		case FINS_IO_READ:
+		case FINS_DM_WRITE:
+		case FINS_AR_WRITE:
+		case FINS_IO_WRITE:
 		{
 
 		/* asynInt16Array */
@@ -1084,6 +1087,9 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		case FINS_DM_READ_32:
 		case FINS_AR_READ_32:
 		case FINS_IO_READ_32:
+		case FINS_DM_WRITE_32:
+		case FINS_AR_WRITE_32:
+		case FINS_IO_WRITE_32:
 		{		
 			if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
 			{
