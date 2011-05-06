@@ -141,7 +141,7 @@
 #define FINS_MAX_MSG		((FINS_MAX_WORDS) * 2 + 100)
 #define FINS_MAX_HEADER		32
 #define FINS_TIMEOUT		1				/* asyn default timeout */
-#define FINS_SOURCE_ADDR	0x01
+#define FINS_SOURCE_ADDR	0xFE				/* default node address 254 */
 #define FINS_GATEWAY		0x02
 
 #define FINS_MODEL_LENGTH	20
@@ -282,8 +282,6 @@ int finsUDPInit(const char *portName, const char *address)
 	pdrvPvt->common.interfaceType = asynCommonType;
 	pdrvPvt->common.pinterface = (void *) &asyn;
 	pdrvPvt->common.drvPvt = pdrvPvt;
-
-/* ASYN_CANBLOCK but not ASYN_MULTIDEVICE */
 
 	status = pasynManager->registerPort(portName, ASYN_MULTIDEVICE | ASYN_CANBLOCK, 1, 0, 0);
 
@@ -857,25 +855,41 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 
 	{
 		struct sockaddr from_addr;
+		int bytes;
 #ifdef vxWorks
-		int iFromLen = 0, bytes;
+		int iFromLen = 0;
 		
-		if (ioctl(pdrvPvt->fd, FIONREAD, (int) &bytes) == OK)
+		do
 		{
-			if (bytes > 0)
+			if (ioctl(pdrvPvt->fd, FIONREAD, (int) &bytes) == OK)
+			{			
+				if (bytes > 0)
+				{
+					bytes = recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen);
+
+					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
+				}
+			}
+			else
 			{
-				recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, ioctl() failed.\n", pdrvPvt->portName);
+				return (-1);
 			}
 		}
-		else
-		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, ioctl() failed.\n", pdrvPvt->portName, pasynUser->reason);
-			return (-1);
-		}
+		while (bytes > 0);
 #else
 		socklen_t iFromLen = 0;
 		
-		recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, MSG_DONTWAIT, &from_addr, &iFromLen);
+		do
+		{
+			bytes = recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, MSG_DONTWAIT, &from_addr, &iFromLen);
+			
+			if (bytes > 0)
+			{
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
+			}
+		}
+		while (bytes > 0);
 #endif
 	}
 
@@ -942,14 +956,15 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		int iFromLen = 0;
 #else
 		socklen_t iFromLen = 0;
-#endif		
+#endif
+		
 		if ((recvlen = recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen)) < 0)
 		{
 			asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, recvfrom() error.\n", pdrvPvt->portName);
 			return (-1);
 		}
 	}
-	
+
 	epicsTimeGetCurrent(&ete);
 	
 	{
@@ -966,8 +981,8 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		
 		if (diff > maxdiff) maxdiff = diff;
 	}
-
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, reply, recvlen, "finsUDPread: received %d bytes.\n", pdrvPvt->portName, recvlen);
+	
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, reply, recvlen, "finsUDPread: port %s, received %d bytes.\n", pdrvPvt->portName, recvlen);
 
 /* Illegal response length check */
 	
@@ -1530,8 +1545,50 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		
 	message[SID] = pdrvPvt->sid++;
 
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, message, sendlen, "finsUDPwrite: sending %d bytes.\n", pdrvPvt->portName, sendlen);
-	
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, message, sendlen, "finsUDPwrite: port %s, sending %d bytes.\n", pdrvPvt->portName, sendlen);
+
+/* flush any old data */
+
+	{
+		struct sockaddr from_addr;
+		int bytes;
+#ifdef vxWorks
+		int iFromLen = 0;
+		
+		do
+		{
+			if (ioctl(pdrvPvt->fd, FIONREAD, (int) &bytes) == OK)
+			{			
+				if (bytes > 0)
+				{
+					bytes = recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen);
+
+					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
+				}
+			}
+			else
+			{
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, ioctl() failed.\n", pdrvPvt->portName);
+				return (-1);
+			}
+		}
+		while (bytes > 0);
+#else
+		socklen_t iFromLen = 0;
+
+		do
+		{
+			bytes = recvfrom(pdrvPvt->fd, reply, FINS_MAX_MSG, MSG_DONTWAIT, &from_addr, &iFromLen);
+			
+			if (bytes > 0)
+			{
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
+			}
+		}
+		while (bytes > 0);
+#endif
+	}
+		
 	epicsTimeGetCurrent(&ets);
 	
 /* send request */
@@ -1620,7 +1677,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		if (diff > maxdiff) maxdiff = diff;
 	}
 	
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, reply, recvlen, "finsUDPwrite: received %d bytes.\n", pdrvPvt->portName, recvlen);
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, reply, recvlen, "finsUDPwrite: port %s, received %d bytes.\n", pdrvPvt->portName, recvlen);
 
 /* Illegal response length check */
 	
@@ -2805,6 +2862,7 @@ static void FINSerror(drvPvt *pdrvPvt, asynUser *pasynUser, const char *name, co
 		
 		default:
 		{
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Error 0x%02x/0x%02x\n", name, pdrvPvt->portName, mres, sres);
 			break;
 		}
 	}
