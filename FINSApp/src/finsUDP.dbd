@@ -1,3 +1,2 @@
 registrar("finsUDPRegister")
 registrar("finsTestRegister")
-registrar("finsTimeRegister")
