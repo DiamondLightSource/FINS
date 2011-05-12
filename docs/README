@@ -66,6 +66,8 @@ Transfers are limited to 500 16-bit words (1000 bytes) maximum.
 PLC's FINS UDP port must be 9600.
 The default timeout is currently one second.
 Assumes that Linux builds support the bswap_ functions (byteswap.h) and others don't.
+A funtion finsTest("<ip address>") sends a FINS data memory read request for two words
+from address 100 to the specified IP address.
 
 Examples
 --------
