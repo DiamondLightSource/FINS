@@ -180,7 +180,7 @@ typedef struct drvPvt
 	
 	struct sockaddr_in addr;	/* PLC destination address */
 	
-	epicsFloat32 tMax, tMin;	/* Max and Min response time of PLC */
+	epicsFloat32 tMax, tMin, tLast;	/* Max and Min and last response time of PLC */
 	
 	char reply[FINS_MAX_MSG];
 	char message[FINS_MAX_MSG];
@@ -497,13 +497,13 @@ int finsUDPInit(const char *portName, const char *address)
 static void report(void *pvt, FILE *fp, int details)
 {
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
-	char ip[16] = "";
+	char ip[32];
 	
-	ipAddrToA(&pdrvPvt->addr, ip, sizeof(ip));
+	ipAddrToDottedIP(&pdrvPvt->addr, ip, sizeof(ip));
 	
-	fprintf(fp, "%s: connected: %s \n", FUNCNAME, (pdrvPvt->connected ? "Yes" : "No"));
-	fprintf(fp, "IP: %s  Node: %d\n", ip, pdrvPvt->node);
-	fprintf(fp, "Max: %.4fs  Min: %.4fs\n", pdrvPvt->tMax, pdrvPvt->tMin);
+	fprintf(fp, "%s: connected %s \n", FUNCNAME, (pdrvPvt->connected ? "Yes" : "No"));
+	fprintf(fp, "    PLC IP: %s  Node: %d\n", ip, pdrvPvt->node);
+	fprintf(fp, "    Max: %.4fs  Min: %.4fs  Last: %.4fs\n", pdrvPvt->tMax, pdrvPvt->tMin, pdrvPvt->tLast);
 }
 
 static asynStatus aconnect(void *pvt, asynUser *pasynUser)
@@ -985,6 +985,8 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 	
 		if (diff > pdrvPvt->tMax) pdrvPvt->tMax = diff;
 		if (diff < pdrvPvt->tMin) pdrvPvt->tMin = diff;
+		
+		pdrvPvt->tLast = diff;
 	}
 	
 	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->reply, recvlen, "finsUDPread: port %s, received %d bytes.\n", pdrvPvt->portName, recvlen);
@@ -1670,6 +1672,8 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 	
 		if (diff > pdrvPvt->tMax) pdrvPvt->tMax = diff;
 		if (diff < pdrvPvt->tMin) pdrvPvt->tMin = diff;
+		
+		pdrvPvt->tLast = diff;
 	}
 	
 	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->reply, recvlen, "finsUDPwrite: port %s, received %d bytes.\n", pdrvPvt->portName, recvlen);
