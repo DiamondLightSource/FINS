@@ -65,11 +65,11 @@
 	We assume that the PLC Ethernet unit receives commands on UDP port 9600. It sends replies to the
 	port number we use to send the request.
 	
-	
 */
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #ifdef linux
 #include <byteswap.h>
@@ -155,7 +155,6 @@
 #define BSWAP16(a)	(((a) & 0x00ff) << 8) | (((a) & 0xff00) >> 8)
 #define BSWAP32(a)	(((a) & 0x000000ff) << 24) | (((a) & 0x0000ff00) << 8) | (((a) & 0x00ff0000) >> 8) | (((a) & 0xff000000) >> 24)
 #endif
-
 
 typedef struct drvPvt
 {
@@ -269,10 +268,9 @@ enum FINS_COMMANDS
 	FINS_EXPLICIT
 };
 
-#define FUNCNAME "finsUDPInit"
-
 int finsUDPInit(const char *portName, const char *address)
 {
+	static char *FUNCNAME = "finsUDPInit";
 	drvPvt *pdrvPvt;
 	asynStatus status;
 	asynOctet *pasynOctet;
@@ -444,7 +442,7 @@ int finsUDPInit(const char *portName, const char *address)
 		{
 			epicsSocketDestroy(pdrvPvt->fd);
 			
-			perror("bind failed");
+			printf("%s: bind failed\n", FUNCNAME);
 			return (-1);
 		}
 		
@@ -501,7 +499,7 @@ static void report(void *pvt, FILE *fp, int details)
 	
 	ipAddrToDottedIP(&pdrvPvt->addr, ip, sizeof(ip));
 	
-	fprintf(fp, "%s: connected %s \n", FUNCNAME, (pdrvPvt->connected ? "Yes" : "No"));
+	fprintf(fp, "%s: connected %s \n", pdrvPvt->portName, (pdrvPvt->connected ? "Yes" : "No"));
 	fprintf(fp, "    PLC IP: %s  Node: %d\n", ip, pdrvPvt->node);
 	fprintf(fp, "    Max: %.4fs  Min: %.4fs  Last: %.4fs\n", pdrvPvt->tMax, pdrvPvt->tMin, pdrvPvt->tLast);
 }
@@ -569,6 +567,8 @@ static asynStatus flushIt(void *pvt,asynUser *pasynUser)
 {
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 
+	puts("flush");
+	
 	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s flush\n", pdrvPvt->portName);
 
 	if (pdrvPvt->fd >= 0)
@@ -577,28 +577,9 @@ static asynStatus flushIt(void *pvt,asynUser *pasynUser)
 		int bytes;
 #ifdef vxWorks
 		int iFromLen = 0;
-		
-		do
-		{
-			if (ioctl(pdrvPvt->fd, FIONREAD, (int) &bytes) == OK)
-			{			
-				if (bytes > 0)
-				{
-					bytes = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen);
-
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "flushIt: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
-				}
-			}
-			else
-			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "flushIt: port %s, ioctl() failed.\n", pdrvPvt->portName);
-				return (-1);
-			}
-		}
-		while (bytes > 0);
 #else
 		socklen_t iFromLen = 0;
-		
+#endif	
 		do
 		{
 			bytes = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, MSG_DONTWAIT, &from_addr, &iFromLen);
@@ -609,7 +590,6 @@ static asynStatus flushIt(void *pvt,asynUser *pasynUser)
 			}
 		}
 		while (bytes > 0);
-#endif
 	}
 	
  	return (asynSuccess);
@@ -862,8 +842,6 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 	
 	pdrvPvt->message[SID] = pdrvPvt->sid++;
 
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->message, sendlen, "finsUDPread: port %s, sending %d bytes.\n", pdrvPvt->portName, sendlen);
-
 /* flush any old data */
 
 	{
@@ -871,30 +849,11 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		int bytes;
 #ifdef vxWorks
 		int iFromLen = 0;
-		
-		do
-		{
-			if (ioctl(pdrvPvt->fd, FIONREAD, (int) &bytes) == OK)
-			{			
-				if (bytes > 0)
-				{
-					bytes = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen);
-
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
-				}
-			}
-			else
-			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, ioctl() failed.\n", pdrvPvt->portName);
-				return (-1);
-			}
-		}
-		while (bytes > 0);
 #else
 		socklen_t iFromLen = 0;
-		
+#endif		
 		do
-		{
+		{			
 			bytes = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, MSG_DONTWAIT, &from_addr, &iFromLen);
 			
 			if (bytes > 0)
@@ -903,8 +862,9 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 			}
 		}
 		while (bytes > 0);
-#endif
 	}
+
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->message, sendlen, "finsUDPread: port %s, sending %d bytes.\n", pdrvPvt->portName, sendlen);
 
 	epicsTimeGetCurrent(&ets);
 	
@@ -970,7 +930,6 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 #else
 		socklen_t iFromLen = 0;
 #endif
-		
 		if ((recvlen = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen)) < 0)
 		{
 			asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, recvfrom() error.\n", pdrvPvt->portName);
@@ -1550,8 +1509,6 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		
 	pdrvPvt->message[SID] = pdrvPvt->sid++;
 
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->message, sendlen, "finsUDPwrite: port %s, sending %d bytes.\n", pdrvPvt->portName, sendlen);
-
 /* flush any old data */
 
 	{
@@ -1559,41 +1516,23 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		int bytes;
 #ifdef vxWorks
 		int iFromLen = 0;
-		
-		do
-		{
-			if (ioctl(pdrvPvt->fd, FIONREAD, (int) &bytes) == OK)
-			{			
-				if (bytes > 0)
-				{
-					bytes = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen);
-
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
-				}
-			}
-			else
-			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, ioctl() failed.\n", pdrvPvt->portName);
-				return (-1);
-			}
-		}
-		while (bytes > 0);
 #else
 		socklen_t iFromLen = 0;
-
+#endif
 		do
 		{
 			bytes = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, MSG_DONTWAIT, &from_addr, &iFromLen);
 			
 			if (bytes > 0)
 			{
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
 			}
 		}
 		while (bytes > 0);
-#endif
 	}
-		
+
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->message, sendlen, "finsUDPwrite: port %s, sending %d bytes.\n", pdrvPvt->portName, sendlen);
+	
 	epicsTimeGetCurrent(&ets);
 	
 /* send request */
