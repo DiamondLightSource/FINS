@@ -10,7 +10,7 @@ w	FINS_CYCLE_TIME_RESET	Reset PLC cycle time calculations
 		
 Int32
 r	FINS_DM_READ		16 bit Data Memory read
-r	FINS_AR_READ		16 bit Auxillary Memory read
+r	FINS_AR_READ		16 bit Auxiliary Memory read
 r	FINS_IO_READ		16 bit I/O Area read
 r	FINS_DM_READ_32		32 bit Data Memory read
 r	FINS_AR_READ_32		32 bit Auxillary Memory read
@@ -57,11 +57,12 @@ w	FINS_IO_WRITE_32	32 bit float I/O Area write
 Initialisation
 --------------
 
-finsUDPInit(portName, PLC's IP address)
+finsUDPInit(portName, <PLC's IP address>)
 
 Usage
 -----
 
+The EPICS IOC's node address is set to 254.
 Transfers are limited to 500 16-bit words (1000 bytes) maximum.
 PLC's FINS UDP port must be 9600.
 The default timeout is currently one second.
