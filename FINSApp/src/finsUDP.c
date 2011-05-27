@@ -186,19 +186,20 @@ typedef struct drvPvt
 	
 } drvPvt;
 
+static void flushUDP(const char *func, drvPvt *pdrvPvt, asynUser *pasynUser);
 static void FINSerror(drvPvt *pdrvPvt, asynUser *pasynUser, const char *name, const unsigned char mres, const unsigned char sres);
 
 /*** asynCommon methods ***************************************************************************/
 
-static void report(void *drvPvt,FILE *fp,int details);
-static asynStatus aconnect(void *drvPvt,asynUser *pasynUser);
-static asynStatus adisconnect(void *drvPvt,asynUser *pasynUser);
+static void report(void *drvPvt, FILE *fp, int details);
+static asynStatus aconnect(void *drvPvt, asynUser *pasynUser);
+static asynStatus adisconnect(void *drvPvt, asynUser *pasynUser);
 static asynCommon asyn = { report, aconnect, adisconnect };
 
 /*** asynOctet methods ****************************************************************************/
 
-static asynStatus udpRead (void *drvPvt, asynUser *pasynUser, char *data, size_t maxchars, size_t *nbytesTransfered,int *eomReason);
-static asynStatus udpWrite(void *drvPvt, asynUser *pasynUser, const char *data, size_t numchars,size_t *nbytesTransfered);
+static asynStatus udpRead (void *drvPvt, asynUser *pasynUser, char *data, size_t maxchars, size_t *nbytesTransfered, int *eomReason);
+static asynStatus udpWrite(void *drvPvt, asynUser *pasynUser, const char *data, size_t numchars, size_t *nbytesTransfered);
 static asynStatus flushIt (void *drvPvt, asynUser *pasynUser);
 
 /*** asynInt32 methods ****************************************************************************/
@@ -533,7 +534,7 @@ static asynStatus aconnect(void *pvt, asynUser *pasynUser)
 	return (asynSuccess);
 }
 
-static asynStatus adisconnect(void *pvt,asynUser *pasynUser)
+static asynStatus adisconnect(void *pvt, asynUser *pasynUser)
 {
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	asynStatus status;
@@ -563,38 +564,43 @@ static asynStatus adisconnect(void *pvt,asynUser *pasynUser)
 	return (asynSuccess);
 }
 
-static asynStatus flushIt(void *pvt,asynUser *pasynUser)
+static asynStatus flushIt(void *pvt, asynUser *pasynUser)
 {
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
-
-	puts("flush");
 	
 	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s flush\n", pdrvPvt->portName);
 
 	if (pdrvPvt->fd >= 0)
 	{
-		struct sockaddr from_addr;
-		int bytes;
-#ifdef vxWorks
-		int iFromLen = 0;
-#else
-		socklen_t iFromLen = 0;
-#endif	
-		do
-		{
-			bytes = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, MSG_DONTWAIT, &from_addr, &iFromLen);
-			
-			if (bytes > 0)
-			{
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "flushIt: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
-			}
-		}
-		while (bytes > 0);
+		flushUDP("flushIt", pdrvPvt, pasynUser);
 	}
 	
  	return (asynSuccess);
 }
 
+/******************************************************************************/
+
+static void flushUDP(const char *func, drvPvt *pdrvPvt, asynUser *pasynUser)
+{
+	struct sockaddr from_addr;
+	int bytes;
+#ifdef vxWorks
+	int iFromLen = 0;
+#else
+	socklen_t iFromLen = 0;
+#endif		
+	do
+	{			
+		bytes = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, MSG_DONTWAIT, &from_addr, &iFromLen);
+			
+		if (bytes > 0)
+		{
+			asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, flushed %d bytes.\n", func, pdrvPvt->portName, bytes);
+		}
+	}
+	while (bytes > 0);
+}
+		
 /******************************************************************************/
 
 /*
@@ -844,25 +850,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 
 /* flush any old data */
 
-	{
-		struct sockaddr from_addr;
-		int bytes;
-#ifdef vxWorks
-		int iFromLen = 0;
-#else
-		socklen_t iFromLen = 0;
-#endif		
-		do
-		{			
-			bytes = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, MSG_DONTWAIT, &from_addr, &iFromLen);
-			
-			if (bytes > 0)
-			{
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
-			}
-		}
-		while (bytes > 0);
-	}
+	flushUDP("finsUDPread", pdrvPvt, pasynUser);
 
 	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->message, sendlen, "finsUDPread: port %s, sending %d bytes.\n", pdrvPvt->portName, sendlen);
 
@@ -1511,26 +1499,8 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 
 /* flush any old data */
 
-	{
-		struct sockaddr from_addr;
-		int bytes;
-#ifdef vxWorks
-		int iFromLen = 0;
-#else
-		socklen_t iFromLen = 0;
-#endif
-		do
-		{
-			bytes = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, MSG_DONTWAIT, &from_addr, &iFromLen);
-			
-			if (bytes > 0)
-			{
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, flushed %d bytes.\n", pdrvPvt->portName, bytes);
-			}
-		}
-		while (bytes > 0);
-	}
-
+	flushUDP("finsUDPwrite", pdrvPvt, pasynUser);
+	
 	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->message, sendlen, "finsUDPwrite: port %s, sending %d bytes.\n", pdrvPvt->portName, sendlen);
 	
 	epicsTimeGetCurrent(&ets);
