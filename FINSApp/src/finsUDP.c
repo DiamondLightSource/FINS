@@ -23,6 +23,7 @@
 		r	FINS_CPU_STATUS
 		r	FINS_CPU_MODE
 		w	FINS_DM_WRITE
+		w	FINS_DM_WRITE_NOREAD
 		w	FINS_AR_WRITE
 		w	FINS_IO_WRITE
 		w	FINS_CYCLE_TIME_RESET
@@ -243,7 +244,7 @@ static asynDrvUser ifaceDrvUser = { drvUserCreate, NULL, NULL };
 enum FINS_COMMANDS
 {
 	FINS_NULL,
-	FINS_DM_READ, FINS_DM_WRITE,
+	FINS_DM_READ, FINS_DM_WRITE, FINS_DM_WRITE_NOREAD,
 	FINS_IO_READ, FINS_IO_WRITE,
 	FINS_AR_READ, FINS_AR_WRITE,
 	FINS_CT_READ, FINS_CT_WRITE,
@@ -648,6 +649,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		case FINS_AR_READ:
 		case FINS_IO_READ:
 		case FINS_DM_WRITE:
+		case FINS_DM_WRITE_NOREAD:
 		case FINS_AR_WRITE:
 		case FINS_IO_WRITE:
 		{
@@ -660,6 +662,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 			{	
 				case FINS_DM_READ:
 				case FINS_DM_WRITE:
+				case FINS_DM_WRITE_NOREAD:
 				{
 					pdrvPvt->message[COM] = DM;
 					break;
@@ -984,6 +987,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		case FINS_AR_READ:
 		case FINS_IO_READ:
 		case FINS_DM_WRITE:
+		case FINS_DM_WRITE_NOREAD:
 		case FINS_AR_WRITE:
 		case FINS_IO_WRITE:
 		{
@@ -1296,6 +1300,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 	/* Memory write */
 	
 		case FINS_DM_WRITE:
+		case FINS_DM_WRITE_NOREAD:
 		case FINS_AR_WRITE:
 		case FINS_IO_WRITE:
 		{
@@ -1307,6 +1312,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 			switch (pasynUser->reason)
 			{	
 				case FINS_DM_WRITE:
+				case FINS_DM_WRITE_NOREAD:
 				{
 					pdrvPvt->message[COM] = DM;
 					break;
@@ -1867,6 +1873,12 @@ static asynStatus ReadInt32(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 			break;
 		}
 
+                case FINS_DM_WRITE_NOREAD:
+                {
+                  asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt32: port %s, addr %d, DO NOT READ HARDWARE\n", pdrvPvt->portName, addr);
+                  return( asynError );
+                }
+
 		default:
 		{
 			asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt32: port %s, addr %d, no such command %d.\n", pdrvPvt->portName, addr, pasynUser->reason);
@@ -1909,6 +1921,12 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 		case FINS_DM_WRITE:
 		{
 			type = "FINS_DM_WRITE";
+			break;
+		}
+
+		case FINS_DM_WRITE_NOREAD:
+		{
+			type = "FINS_DM_WRITE_NOREAD";
 			break;
 		}
 		
@@ -1960,6 +1978,7 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 	switch (pasynUser->reason)
 	{
 		case FINS_DM_WRITE:
+		case FINS_DM_WRITE_NOREAD:
 		case FINS_AR_WRITE:
 		case FINS_IO_WRITE:
 		case FINS_CYCLE_TIME_RESET:
@@ -2544,6 +2563,11 @@ asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, co
 		if (strcmp("FINS_DM_WRITE", drvInfo) == 0)
 		{
 			pasynUser->reason = FINS_DM_WRITE;
+		}
+		else
+		if (strcmp("FINS_DM_WRITE_NOREAD", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_DM_WRITE_NOREAD;
 		}
 		else
 		if (strcmp("FINS_DM_WRITE_32", drvInfo) == 0)
