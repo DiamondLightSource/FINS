@@ -25,11 +25,16 @@
 		w	FINS_DM_WRITE
 		w	FINS_DM_WRITE_NOREAD
 		w	FINS_AR_WRITE
+		w	FINS_AR_WRITE_NOREAD
 		w	FINS_IO_WRITE
+		w	FINS_IO_WRITE_NOREAD
 		w	FINS_CYCLE_TIME_RESET
 		w	FINS_DM_WRITE_32
+		w	FINS_DM_WRITE_32_NOREAD
 		w	FINS_AR_WRITE_32
+		w	FINS_AR_WRITE_32_NOREAD
 		w	FINS_IO_WRITE_32
+		w	FINS_IO_WRITE_32_NOREAD
 		
 		Int16Array
 		r	FINS_DM_READ
@@ -37,8 +42,11 @@
 		r	FINS_IO_READ
 		r	FINS_CLOCK_READ
 		w	FINS_DM_WRITE
+		w	FINS_DM_WRITE_NOREAD
 		w	FINS_AR_WRITE
+		w	FINS_AR_WRITE_NOREAD
 		w	FINS_IO_WRITE
+		w	FINS_IO_WRITE_NOREAD
 		
 		Int32Array
 		r	FINS_DM_READ_32
@@ -46,16 +54,22 @@
 		r	FINS_IO_READ_32
 		r	FINS_CYCLE_TIME
 		w	FINS_DM_WRITE_32
+		w	FINS_DM_WRITE_32_NOREAD
 		w	FINS_AR_WRITE_32
+		w	FINS_AR_WRITE_32_NOREAD
 		w	FINS_IO_WRITE_32
+		w	FINS_IO_WRITE_32_NOREAD
 		
 		Float32Array
 		r	FINS_DM_READ_32
 		r	FINS_AR_READ_32
 		r	FINS_IO_READ_32
 		w	FINS_DM_WRITE_32
+		w	FINS_DM_WRITE_32_NOREAD
 		w	FINS_AR_WRITE_32
+		w	FINS_AR_WRITE_32_NOREAD
 		w	FINS_IO_WRITE_32
+		w	FINS_IO_WRITE_32_NOREAD
 		
 	ASYN_CANBLOCK is set because the driver must wait for the reply
 	ASYN_MULTIDEVICE is set so that the address field can be used to set the PLC's memory address
@@ -245,13 +259,13 @@ enum FINS_COMMANDS
 {
 	FINS_NULL,
 	FINS_DM_READ, FINS_DM_WRITE, FINS_DM_WRITE_NOREAD,
-	FINS_IO_READ, FINS_IO_WRITE,
-	FINS_AR_READ, FINS_AR_WRITE,
+	FINS_IO_READ, FINS_IO_WRITE, FINS_IO_WRITE_NOREAD,
+	FINS_AR_READ, FINS_AR_WRITE, FINS_AR_WRITE_NOREAD,
 	FINS_CT_READ, FINS_CT_WRITE,
-	FINS_DM_READ_32, FINS_DM_WRITE_32,
-	FINS_IO_READ_32, FINS_IO_WRITE_32,
-	FINS_AR_READ_32, FINS_AR_WRITE_32,
-	FINS_CT_READ_32, FINS_CT_WRITE_32,
+	FINS_DM_READ_32, FINS_DM_WRITE_32, FINS_DM_WRITE_32_NOREAD,
+	FINS_IO_READ_32, FINS_IO_WRITE_32, FINS_IO_WRITE_32_NOREAD,
+	FINS_AR_READ_32, FINS_AR_WRITE_32, FINS_AR_WRITE_32_NOREAD,
+	FINS_CT_READ_32, FINS_CT_WRITE_32, FINS_CT_WRITE_32_NOREAD,
 	FINS_READ_MULTI,
 	FINS_WRITE_MULTI,
 	FINS_SET_MULTI_TYPE,
@@ -649,7 +663,6 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		case FINS_AR_READ:
 		case FINS_IO_READ:
 		case FINS_DM_WRITE:
-		case FINS_DM_WRITE_NOREAD:
 		case FINS_AR_WRITE:
 		case FINS_IO_WRITE:
 		{
@@ -662,7 +675,6 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 			{	
 				case FINS_DM_READ:
 				case FINS_DM_WRITE:
-				case FINS_DM_WRITE_NOREAD:
 				{
 					pdrvPvt->message[COM] = DM;
 					break;
@@ -987,7 +999,6 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		case FINS_AR_READ:
 		case FINS_IO_READ:
 		case FINS_DM_WRITE:
-		case FINS_DM_WRITE_NOREAD:
 		case FINS_AR_WRITE:
 		case FINS_IO_WRITE:
 		{
@@ -1302,7 +1313,9 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		case FINS_DM_WRITE:
 		case FINS_DM_WRITE_NOREAD:
 		case FINS_AR_WRITE:
+		case FINS_AR_WRITE_NOREAD:
 		case FINS_IO_WRITE:
+		case FINS_IO_WRITE_NOREAD:
 		{
 			pdrvPvt->message[MRC] = 0x01;
 			pdrvPvt->message[SRC] = 0x02;
@@ -1319,12 +1332,14 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 				}
 				
 				case FINS_AR_WRITE:
+				case FINS_AR_WRITE_NOREAD:
 				{
 					pdrvPvt->message[COM] = AR;
 					break;
 				}
 				
 				case FINS_IO_WRITE:
+				case FINS_IO_WRITE_NOREAD:
 				{
 					pdrvPvt->message[COM] = IO;
 					break;
@@ -1409,8 +1424,11 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		}
 
 		case FINS_DM_WRITE_32:
+		case FINS_DM_WRITE_32_NOREAD:
 		case FINS_AR_WRITE_32:
+		case FINS_AR_WRITE_32_NOREAD:
 		case FINS_IO_WRITE_32:
+		case FINS_IO_WRITE_32_NOREAD:
 		{
 			pdrvPvt->message[MRC] = 0x01;
 			pdrvPvt->message[SRC] = 0x02;
@@ -1420,18 +1438,21 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 			switch (pasynUser->reason)
 			{	
 				case FINS_DM_WRITE_32:
+				case FINS_DM_WRITE_32_NOREAD:
 				{
 					pdrvPvt->message[COM] = DM;
 					break;
 				}
 				
 				case FINS_AR_WRITE_32:
+				case FINS_AR_WRITE_32_NOREAD:
 				{
 					pdrvPvt->message[COM] = AR;
 					break;
 				}
 				
 				case FINS_IO_WRITE_32:
+				case FINS_IO_WRITE_32_NOREAD:
 				{
 					pdrvPvt->message[COM] = IO;
 					break;
@@ -1873,11 +1894,16 @@ static asynStatus ReadInt32(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 			break;
 		}
 
-                case FINS_DM_WRITE_NOREAD:
-                {
-                  asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt32: port %s, addr %d, DO NOT READ HARDWARE\n", pdrvPvt->portName, addr);
-                  return( asynError );
-                }
+		case FINS_DM_WRITE_NOREAD:
+		case FINS_IO_WRITE_NOREAD:
+		case FINS_AR_WRITE_NOREAD:
+		case FINS_DM_WRITE_32_NOREAD:
+		case FINS_IO_WRITE_32_NOREAD:
+		case FINS_AR_WRITE_32_NOREAD:
+		{
+			asynPrint(pasynUser, ASYN_TRACE_FLOW, "ReadInt32: port %s, addr %d, WRITE_NOREAD\n", pdrvPvt->portName, addr);
+			return (asynError);
+		}
 
 		default:
 		{
@@ -1935,6 +1961,12 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 			type = "FINS_AR_WRITE";
 			break;
 		}
+
+		case FINS_AR_WRITE_NOREAD:
+		{
+			type = "FINS_AR_WRITE_NOREAD";
+			break;
+		}
 		
 		case FINS_IO_WRITE:
 		{
@@ -1942,6 +1974,12 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 			break;
 		}
 		
+		case FINS_IO_WRITE_NOREAD:
+		{
+			type = "FINS_IO_WRITE_NOREAD";
+			break;
+		}
+
 		case FINS_CYCLE_TIME_RESET:
 		{
 			type = "FINS_CYCLE_TIME_RESET";
@@ -1953,6 +1991,12 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 			type = "FINS_DM_WRITE_32";
 			break;
 		}
+
+		case FINS_DM_WRITE_32_NOREAD:
+		{
+			type = "FINS_DM_WRITE_32_NOREAD";
+			break;
+		}
 		
 		case FINS_AR_WRITE_32:
 		{
@@ -1960,9 +2004,21 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 			break;
 		}
 		
+		case FINS_AR_WRITE_32_NOREAD:
+		{
+			type = "FINS_AR_WRITE_32_NOREAD";
+			break;
+		}
+		
 		case FINS_IO_WRITE_32:
 		{
 			type = "FINS_IO_WRITE_32";
+			break;
+		}
+		
+		case FINS_IO_WRITE_32_NOREAD:
+		{
+			type = "FINS_IO_WRITE_32_NOREAD";
 			break;
 		}
 		
@@ -1980,7 +2036,9 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 		case FINS_DM_WRITE:
 		case FINS_DM_WRITE_NOREAD:
 		case FINS_AR_WRITE:
+		case FINS_AR_WRITE_NOREAD:
 		case FINS_IO_WRITE:
+		case FINS_IO_WRITE_NOREAD:
 		case FINS_CYCLE_TIME_RESET:
 		{
 			
@@ -1995,8 +2053,11 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 		}
 
 		case FINS_DM_WRITE_32:
+		case FINS_DM_WRITE_32_NOREAD:
 		case FINS_AR_WRITE_32:
+		case FINS_AR_WRITE_32_NOREAD:
 		case FINS_IO_WRITE_32:
+		case FINS_IO_WRITE_32_NOREAD:
 		{
 			
 		/* form FINS message and send data */
@@ -2575,6 +2636,11 @@ asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, co
 			pasynUser->reason = FINS_DM_WRITE_32;
 		}
 		else
+		if (strcmp("FINS_DM_WRITE_32_NOREAD", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_DM_WRITE_32_NOREAD;
+		}
+		else
 		if (strcmp("FINS_IO_READ", drvInfo) == 0)
 		{
 			pasynUser->reason = FINS_IO_READ;
@@ -2590,9 +2656,19 @@ asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, co
 			pasynUser->reason = FINS_IO_WRITE;
 		}
 		else
+		if (strcmp("FINS_IO_WRITE_NOREAD", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_IO_WRITE_NOREAD;
+		}
+		else
 		if (strcmp("FINS_IO_WRITE_32", drvInfo) == 0)
 		{
 			pasynUser->reason = FINS_IO_WRITE_32;
+		}
+		else
+		if (strcmp("FINS_IO_WRITE_32_NOREAD", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_IO_WRITE_32_NOREAD;
 		}
 		else
 		if (strcmp("FINS_AR_READ", drvInfo) == 0)
@@ -2610,9 +2686,19 @@ asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, co
 			pasynUser->reason = FINS_AR_WRITE;
 		}
 		else
+		if (strcmp("FINS_AR_WRITE_NOREAD", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_AR_WRITE_NOREAD;
+		}
+		else
 		if (strcmp("FINS_AR_WRITE_32", drvInfo) == 0)
 		{
 			pasynUser->reason = FINS_AR_WRITE_32;
+		}
+		else
+		if (strcmp("FINS_AR_WRITE_32_NOREAD", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_AR_WRITE_32_NOREAD;
 		}
 		else
 		if (strcmp("FINS_CT_READ", drvInfo) == 0)
