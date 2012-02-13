@@ -510,7 +510,7 @@ x 130
 y 160
 w 30
 h 20
-controlPv "$(device)2:CLOCK:MIN"
+controlPv "$(device):CLOCK:MIN"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
