@@ -60,9 +60,8 @@ w	FINS_DM_WRITE_32	32 bit float Data Memory write
 w	FINS_AR_WRITE_32	32 bit float Auxillary Memory write
 w	FINS_IO_WRITE_32	32 bit float I/O Area write
 
-The _NOREAD versions of the WRITE functions do not perform an initial read from the
-device during record initialisation. Performing the inital read is asyn's method of
-bumpless restarts.
+The _NOREAD versions of the WRITE functions do not perform an initial read from the device
+during record initialisation. Performing the inital read is asyn's method of bumpless restarts.
 
 Initialisation
 --------------
@@ -72,13 +71,16 @@ finsUDPInit(portName, <PLC's IP address>)
 Usage
 -----
 
-The EPICS IOC's node address is set to 254.
-Transfers are limited to 500 16-bit words (1000 bytes) maximum.
-PLC's FINS UDP port must be 9600.
-The default timeout is currently one second.
-Assumes that Linux builds support the bswap_ functions (byteswap.h) and others don't.
-A funtion finsTest("<ip address>") sends a FINS data memory read request for two words
-from address 100 to the specified IP address.
+* The EPICS IOC's node address is set to 254.
+
+* Transfers are limited to 500 16-bit words (1000 bytes) maximum.
+
+* PLC's FINS UDP port must be 9600.
+
+* The default timeout, the third parameter of the @asyn() command, is currently one second.
+
+* A funtion finsTest("<ip address>") sends a FINS data memory read request for two words from
+  address 100 to the specified IP address.
 
 Examples
 --------
