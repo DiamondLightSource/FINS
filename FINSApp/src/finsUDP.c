@@ -77,10 +77,6 @@
 #include <string.h>
 #include <errno.h>
 
-#ifdef linux
-#include <byteswap.h>
-#endif
-
 #ifdef vxWorks
 #include <sockLib.h>
 #include <inetLib.h>
@@ -152,14 +148,44 @@
 
 #define FINS_MODEL_LENGTH	20
 
-/* some byte swapping macros */
+/*
+	Some byte swapping macros
+	
+	PLC transmits 16-bit data as high byte - low byte, but when reading 32-bit data as two 16-bit words
+	it is transfered as low word - high word. Commands which return 32-bit data use high word - low word.
 
-#ifdef linux
-#define BSWAP16(a)	bswap_16((a))
-#define BSWAP32(a)	bswap_32((a))
+		IOC			PLC
+		00 01 02 03		00 01 02 03
+	BE	11 22 33 44		33 44 11 22
+	LE	44 33 22 11		33 44 11 22
+	
+	From PLC
+		B8 6E 2F 62 = 2.06201e-10
+
+	On Linux PC
+		B8 6E 2F 62 = -5.678775e-05
+		6E B8 62 2F =  2.062010e-10
+*/
+
+#define BESWAP32(a)	(((a) & 0x0000ffff) << 16) | (((a) & 0xffff0000) >> 16)
+#define LESWAP32(a)	(((a) & 0x00ff00ff) <<  8) | (((a) & 0xff00ff00) >>  8)
+
+#if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
+
+	#define BSWAP16(a)	(((a) & 0x00ff) << 8) | (((a) & 0xff00) >> 8)
+	#define BSWAP32(a)	(((a) & 0x000000ff) << 24) | (((a) & 0x0000ff00) << 8) | (((a) & 0x00ff0000) >> 8) | (((a) & 0xff000000) >> 24)
+	#define SWAPT		"swapping"
+
+	#define WSWAP32 LESWAP32
+
 #else
-#define BSWAP16(a)	(((a) & 0x00ff) << 8) | (((a) & 0xff00) >> 8)
-#define BSWAP32(a)	(((a) & 0x000000ff) << 24) | (((a) & 0x0000ff00) << 8) | (((a) & 0x00ff0000) >> 8) | (((a) & 0xff000000) >> 24)
+
+	#define BSWAP16(a)	(a)
+	#define BSWAP32(a)	(a)
+	#define SWAPT		"copying"
+
+	#define WSWAP32 BESWAP32
+	
 #endif
 
 typedef struct drvPvt
@@ -620,7 +646,7 @@ static void flushUDP(const char *func, drvPvt *pdrvPvt, asynUser *pasynUser)
 
 	data		epicsInt16, epicsInt32 or epicsFloat32 data is written here
 	nelements	number of 16 or 32 bit words to read
-	address		PLC memory address
+	address	PLC memory address
 	asynSize	sizeof(epicsInt16) for asynInt16Array or sizeof(epicsInt32) for asynInt16Array and asynInt32Array.
 */
 
@@ -998,27 +1024,16 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		
 			if (asynSize == sizeof(epicsUInt16))
 			{
-				if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
-				{
-					int i;
-					epicsUInt16 *ptrs = (epicsUInt16 *) &pdrvPvt->reply[RESP];
-					epicsUInt16 *ptrd = (epicsUInt16 *) data;
+				int i;
+				epicsUInt16 *ptrs = (epicsUInt16 *) &pdrvPvt->reply[RESP];
+				epicsUInt16 *ptrd = (epicsUInt16 *) data;
 
-					for (i = 0; i < nelements; i++)
-					{
-						ptrd[i] = BSWAP16(ptrs[i]);
-					}
-					
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, swapping %d 16-bit words.\n", pdrvPvt->portName, nelements);
-				}
-				else
+				for (i = 0; i < nelements; i++)
 				{
-					const size_t nbytes = nelements * sizeof(epicsUInt16);
-					
-					memcpy(data, &pdrvPvt->reply[RESP], nbytes);
-					
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, copying %d 16-bit words.\n", pdrvPvt->portName, nelements);			
+					ptrd[i] = BSWAP16(ptrs[i]);
 				}
+					
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, %s %d 16-bit words.\n", pdrvPvt->portName, SWAPT, nelements);
 			}
 			else
 			
@@ -1029,24 +1044,12 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 				epicsUInt16 *ptrs = (epicsUInt16 *) &pdrvPvt->reply[RESP];
 				epicsUInt32 *ptrd = (epicsUInt32 *) data;
 
-				if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
+				for (i = 0; i < nelements; i++)
 				{
-					for (i = 0; i < nelements; i++)
-					{
-						ptrd[i] = (epicsUInt32) BSWAP16(ptrs[i]);
-					}
-					
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, swapping %d 16-bit word.\n", pdrvPvt->portName, nelements);
+					ptrd[i] = (epicsUInt32) BSWAP16(ptrs[i]);
 				}
-				else
-				{
-					for (i = 0; i < nelements; i++)
-					{
-						ptrd[i] = (epicsUInt32) ptrs[i];
-					}
 					
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, copying %d 16-bit word.\n", pdrvPvt->portName, nelements);			
-				}
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, %s %d 16-bit word.\n", pdrvPvt->portName, SWAPT, nelements);
 			}
 			
 		/* check the number of elements received */
@@ -1066,28 +1069,17 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		case FINS_AR_WRITE_32:
 		case FINS_IO_WRITE_32:
 		{		
-			if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
-			{
-				int i;
-				epicsUInt32 *ptrs = (epicsUInt32 *) &pdrvPvt->reply[RESP];
-				epicsUInt32 *ptrd = (epicsUInt32 *) data;
+			int i;
+			epicsUInt32 *ptrs = (epicsUInt32 *) &pdrvPvt->reply[RESP];
+			epicsUInt32 *ptrd = (epicsUInt32 *) data;
 
-				for (i = 0; i < nelements; i++)
-				{
-					ptrd[i] = BSWAP32(ptrs[i]);
-				}
-				
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, swapping %d 32-bit words.\n", pdrvPvt->portName, nelements);
-			}
-			else
+			for (i = 0; i < nelements; i++)
 			{
-				const size_t nbytes = nelements * sizeof(epicsUInt32);
-
-				memcpy(data, &pdrvPvt->reply[RESP], nbytes);
-				
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, copying %d 32-bit words.\n", pdrvPvt->portName, nelements);
+				ptrd[i] = WSWAP32(ptrs[i]);
 			}
-			
+				
+			asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, swapping %d 32-bit words.\n", pdrvPvt->portName, nelements);
+
 		/* check the number of elements received */
 		
 			if (transfered)
@@ -1144,30 +1136,18 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 
 		case FINS_CYCLE_TIME:
 		{
-			if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
-			{
-				int i;
-				epicsInt32 *rep = (epicsInt32 *) &pdrvPvt->reply[RESP + 0];
-				epicsInt32 *dat = (epicsInt32 *) data;
+			int i;
+			epicsInt32 *rep = (epicsInt32 *) &pdrvPvt->reply[RESP + 0];
+			epicsInt32 *dat = (epicsInt32 *) data;
 
-				for (i = 0; i < 3; i++)
-				{
-					dat[i] = BSWAP32(rep[i]);
-				}
-				
-				if (transfered)
-				{
-					*transfered = 3;
-				}
-			}
-			else
+			for (i = 0; i < 3; i++)
 			{
-				memcpy(data, &pdrvPvt->reply[RESP], 3 * sizeof(epicsInt32));
+				dat[i] = BSWAP32(rep[i]);
+			}
 				
-				if (transfered)
-				{
-					*transfered = 3;
-				}
+			if (transfered)
+			{
+				*transfered = 3;
 			}
 			
 			break;
@@ -1177,16 +1157,9 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 
 		case FINS_CYCLE_TIME_MEAN:
 		{
-			if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
-			{
-				const epicsInt32 *rep = (epicsInt32 *) &pdrvPvt->reply[RESP + 0];
+			const epicsInt32 *rep = (epicsInt32 *) &pdrvPvt->reply[RESP + 0];
 
-				*(epicsInt32 *)(data) = BSWAP32(*rep);
-			}
-			else
-			{
-				*(epicsInt32 *)(data) = pdrvPvt->reply[RESP + 0];
-			}
+			*(epicsInt32 *)(data) = BSWAP32(*rep);
 
 			if (transfered)
 			{
@@ -1200,16 +1173,9 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 
 		case FINS_CYCLE_TIME_MAX:
 		{
-			if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
-			{
-				const epicsInt32 *rep = (epicsInt32 *) &pdrvPvt->reply[RESP + 4];
+			const epicsInt32 *rep = (epicsInt32 *) &pdrvPvt->reply[RESP + 4];
 
-				*(epicsInt32 *)(data) = BSWAP32(*rep);
-			}
-			else
-			{
-				*(epicsInt32 *)(data) = pdrvPvt->reply[RESP + 4];
-			}
+			*(epicsInt32 *)(data) = BSWAP32(*rep);
 
 			if (transfered)
 			{
@@ -1223,16 +1189,9 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 
 		case FINS_CYCLE_TIME_MIN:
 		{
-			if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
-			{
-				const epicsInt32 *rep = (epicsInt32 *) &pdrvPvt->reply[RESP + 8];
+			const epicsInt32 *rep = (epicsInt32 *) &pdrvPvt->reply[RESP + 8];
 
-				*(epicsInt32 *)(data) = BSWAP32(*rep);
-			}
-			else
-			{
-				*(epicsInt32 *)(data) = pdrvPvt->reply[RESP + 8];
-			}
+			*(epicsInt32 *)(data) = BSWAP32(*rep);
 
 			if (transfered)
 			{
@@ -1358,27 +1317,16 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		
 			if (asynSize == sizeof(epicsUInt16))
 			{
-				if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
-				{
-					int i;
-					epicsUInt16 *ptrd = (epicsUInt16 *) &pdrvPvt->message[COM + 6];
-					epicsUInt16 *ptrs = (epicsUInt16 *) data;
+				int i;
+				epicsUInt16 *ptrd = (epicsUInt16 *) &pdrvPvt->message[COM + 6];
+				epicsUInt16 *ptrs = (epicsUInt16 *) data;
 
-					for (i = 0; i < nwords; i++)
-					{
-						ptrd[i] = BSWAP16(ptrs[i]);
-					}
-
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, swapping %d 16-bit words.\n", pdrvPvt->portName, nwords);
-				}
-				else
+				for (i = 0; i < nwords; i++)
 				{
-					const size_t nbytes = nwords * sizeof(epicsUInt16);
-					
-					memcpy(&pdrvPvt->message[COM+6], data, nbytes);
-					
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, copying %d 16-bit words.\n", pdrvPvt->portName, nwords);
+					ptrd[i] = BSWAP16(ptrs[i]);
 				}
+
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, %s %d 16-bit words.\n", pdrvPvt->portName, SWAPT, nwords);
 			}
 			else
 			
@@ -1389,24 +1337,12 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 				epicsUInt16 *ptrd = (epicsUInt16 *) &pdrvPvt->message[COM + 6];
 				epicsUInt32 *ptrs = (epicsUInt32 *) data;
 
-				if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
+				for (i = 0; i < nwords; i++)
 				{
-					for (i = 0; i < nwords; i++)
-					{
-						ptrd[i] = BSWAP16((epicsUInt16) ptrs[i]);
-					}
-
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, swapping %d 16-bit word.\n", pdrvPvt->portName, nwords);				
+					ptrd[i] = BSWAP16((epicsUInt16) ptrs[i]);
 				}
-				else
-				{
-					for (i = 0; i < nwords; i++)
-					{
-						ptrd[i] = (epicsUInt16) ptrs[i];
-					}
 
-					asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, copying %d 16-bit word.\n", pdrvPvt->portName, nwords);
-				}
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, %s %d 16-bit word.\n", pdrvPvt->portName, SWAPT, nwords);				
 			}
 			
 			sendlen = COM + 6 + nwords * sizeof(short);
@@ -1466,9 +1402,8 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 			pdrvPvt->message[COM+4] = nwords >> 8;
 			pdrvPvt->message[COM+5] = nwords & 0xff;
 
-		/* convert data - PLC is Big Endian */
+		/* convert data  */
 
-			if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
 			{
 				int i;
 				epicsUInt32 *ptrd = (epicsUInt32 *) &pdrvPvt->message[COM + 6];
@@ -1476,16 +1411,10 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 				
 				for (i = 0; i < nwords / 2; i++)
 				{
-					ptrd[i] = BSWAP32(ptrs[i]);
+					ptrd[i] = WSWAP32(ptrs[i]);
 				}
 				
 				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, swapping %d 32-bit words.\n", pdrvPvt->portName, nwords >> 1);
-			}
-			else
-			{
-				memcpy(&pdrvPvt->message[COM+6], data, nwords * sizeof(short));
-				
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, copying %d 32-bit words.\n", pdrvPvt->portName, nwords >> 1);
 			}
 
 			sendlen = COM + 6 + nwords * sizeof(short);
@@ -2057,6 +1986,8 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 			{
 				return (asynError);
 			}
+			
+			break;
 		}
 		
 		default:
@@ -2375,11 +2306,13 @@ static asynStatus WriteInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *va
 			type = "FINS_AR_WRITE_32";
 			break;
 		}
+		
 		case FINS_IO_WRITE_32:
 		{
 			type = "FINS_IO_WRITE_32";
 			break;
 		}
+		
 		default:
 		{
 			asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteInt32Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
@@ -2458,6 +2391,7 @@ static asynStatus ReadFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 
 			type = "FINS_AR_READ_32";
 			break;
 		}
+		
 		case FINS_IO_READ_32:
 		{
 			type = "FINS_IO_READ_32";
@@ -2769,103 +2703,120 @@ asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, co
 	return (asynError);
 }
 
+static const char *error01 = "Local node error";
+static const char *error02 = "Destination node error";
+static const char *error03 = "Communications controller error";
+static const char *error04 = "Not executable";
+static const char *error05 = "Routing error";
+static const char *error10 = "Command format error";
+static const char *error11 = "Parameter error";
+static const char *error20 = "Read not possible";
+static const char *error21 = "Write not possible";
+static const char *error22 = "Not executable in curent mode";
+static const char *error23 = "No unit";
+static const char *error24 = "Start/Stop not possible";
+static const char *error25 = "Unit error";
+static const char *error26 = "Command error";
+static const char *error30 = "Access rights error";
+static const char *error40 = "Abort error";
+
 static void FINSerror(drvPvt *pdrvPvt, asynUser *pasynUser, const char *name, const unsigned char mres, const unsigned char sres)
 {
 	switch (mres)
 	{
 		case 0x01:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Local node error 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error01, sres);
 			break;
 		}
 		
 		case 0x02:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Destination node error 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error02, sres);
 			break;
 		}
 		
 		case 0x03:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Communications controller error 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error03, sres);
 			break;
 		}
 		
 		case 0x04:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Not executable 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error04, sres);
 			break;
 		}
 		
 		case 0x05:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Routing error 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error05, sres);
 			break;
 		}
 		
 		case 0x10:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Command format error 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error10, sres);
 			break;
 		}
 		
 		case 0x11:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Parameter error 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error11, sres);
 			break;
 		}
 		
 		case 0x20:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Read not possible 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error20, sres);
 			break;
 		}
 		
 		case 0x21:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Write not possible 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error21, sres);
 			break;
 		}
 		
 		case 0x22:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Not executable in curent mode 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error22, sres);
 			break;
 		}
 		
 		case 0x23:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, No unit 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error23, sres);
 			break;
 		}
 		
 		case 0x24:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Start/Stop not possible 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %se 0x%02x\n", name, pdrvPvt->portName, error24, sres);
 			break;
 		}
 		
 		case 0x25:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Unit error 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error25, sres);
 			break;
 		}
 		
 		case 0x26:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Command error 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error26, sres);
 			break;
 		}
 		
 		case 0x30:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Access rights error 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error30, sres);
 			break;
 		}
 		
 		case 0x40:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Abort error 0x%02x\n", name, pdrvPvt->portName, sres);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, %s 0x%02x\n", name, pdrvPvt->portName, error40, sres);
 			break;
 		}
 		
@@ -3087,7 +3038,124 @@ int finsTest(char *address)
 	
 		puts("");
 	}
+
+/* Illegal response length check */
 	
+	if (recvlen < MIN_RESP_LEN)
+	{
+		puts("finsUDPread: receive length too small.");
+	}
+
+/* check response code */
+
+	if ((message[MRES] != 0x00) || (message[SRES] != 0x00))
+	{
+		switch (message[MRES])
+		{
+			case 0x01:
+			{
+				printf("%s 0x%02x\n", error01, message[SRES]);
+				break;
+			}
+		
+			case 0x02:
+			{
+				printf("%s 0x%02x\n", error02, message[SRES]);
+				break;
+			}
+		
+			case 0x03:
+			{
+				printf("%s 0x%02x\n", error03, message[SRES]);
+				break;
+			}
+		
+			case 0x04:
+			{
+				printf("%s 0x%02x\n", error04, message[SRES]);
+				break;
+			}
+		
+			case 0x05:
+			{
+				printf("%s 0x%02x\n", error05, message[SRES]);
+				break;
+			}
+		
+			case 0x10:
+			{
+				printf("%s 0x%02x\n", error10, message[SRES]);
+				break;
+			}
+		
+			case 0x11:
+			{
+				printf("%s 0x%02x\n", error11, message[SRES]);
+				break;
+			}
+		
+			case 0x20:
+			{
+				printf("%s 0x%02x\n", error20, message[SRES]);
+				break;
+			}
+		
+			case 0x21:
+			{
+				printf("%s 0x%02x\n", error21, message[SRES]);
+				break;
+			}
+		
+			case 0x22:
+			{
+				printf("%s 0x%02x\n", error22, message[SRES]);
+				break;
+			}
+		
+			case 0x23:
+			{
+				printf("%s 0x%02x\n", error23, message[SRES]);
+				break;
+			}
+		
+			case 0x24:
+			{
+				printf("%s 0x%02x\n", error24, message[SRES]);
+				break;
+			}
+		
+			case 0x25:
+			{
+				printf("%s 0x%02x\n", error25, message[SRES]);
+				break;
+			}
+		
+			case 0x26:
+			{
+				printf("%s 0x%02x\n", error26, message[SRES]);
+				break;
+			}
+		
+			case 0x30:
+			{
+				printf("%s 0x%02x\n", error30, message[SRES]);
+				break;
+			}
+		
+			case 0x40:
+			{
+				printf("%s 0x%02x\n", error40, message[SRES]);
+				break;
+			}
+		
+			default:
+			{
+				printf("Error 0x%02x/0x%02x\n", message[MRES], message[SRES]);
+				break;
+			}
+		}
+	}
+		
 	close(fd);
 	
 	return (0);
