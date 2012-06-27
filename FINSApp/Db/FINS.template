@@ -5,7 +5,7 @@
 # macros:
 # device	record device name
 # etn		PLC Ethernet module address, default 0x10
-# port		asyn port name
+# port	asyn port name
 
 #---------------------------------------------------------------------------------------------------
 
@@ -319,4 +319,98 @@ record(subArray, "$(device):CLOCK:SEC")
 	field(FTVL, "SHORT")
 }
 
-################################################################################
+#---------------------------------------------------------------------------------------------------
+
+record(waveform, "$(device):DMREAD00")
+{
+	field(DTYP, "asynInt16ArrayIn")
+	field(INP,  "@asyn($(port), 0x00, 5) FINS_DM_READ")
+	field(NELM, "3")
+	field(FTVL, "SHORT")
+	field(PINI, "YES")
+	
+	field(FLNK, "$(device):SERIALID")
+}
+
+#---------------------------------------------------------------------------------------------------
+
+record(subArray, "$(device):SERIALID")
+{
+	field(DESC, "DLS Serial number")
+	field(INP,  "$(device):DMREAD00 MS")
+	field(INDX, "0")
+	field(MALM, "3")
+	field(NELM, "1")
+	field(FTVL, "SHORT")
+	
+	field(FLNK, "$(device):SOFTWARE")
+}
+
+record(subArray, "$(device):SOFTWARE")
+{
+	field(DESC, "Software version")
+	field(INP,  "$(device):DMREAD00 MS")
+	field(INDX, "1")
+	field(MALM, "3")
+	field(NELM, "1")
+	field(FTVL, "SHORT")
+	
+	field(FLNK, "$(device):SOFTMOD")
+}
+
+record(calc, "$(device):SOFTMOD")
+{
+	field(INPA, "$(device):SOFTWARE MS")
+	field(CALC, "FLOOR(A * 0.001)")
+	
+	field(FLNK, "$(device):REVISION")
+}
+
+record(subArray, "$(device):REVISION")
+{
+	field(DESC, "Software revision")
+	field(INP,  "$(device):DMREAD00 MS")
+	field(INDX, "2")
+	field(MALM, "3")
+	field(NELM, "1")
+	field(FTVL, "SHORT")
+	
+	field(FLNK, "$(device):PLCTYPE")
+}
+
+record(mbbi, "$(device):PLCTYPE")
+{
+	field(DTYP, "Raw Soft Channel")
+	field(NOBT, "4")
+	field(INP,  "$(device):SOFTMOD MS")
+	field(ZRVL, "0")
+	field(ONVL, "1")
+	field(TWVL, "2")
+	field(THVL, "3")
+	field(FRVL, "4")
+	field(FVVL, "5")
+	field(SXVL, "6")
+	field(SVVL, "7")
+	field(EIVL, "8")
+	field(ZRST, "Invalid")
+	field(ONST, "Linac")
+	field(TWST, "Machine Protect")
+	field(THST, "Gas Brem")
+	field(FRST, "Vac Four Valve")
+	field(FVST, "Undefined")
+	field(SXST, "Vac Six Valve")
+	field(SVST, "Vacuum Cart")
+	field(EIST, "Temperature")
+	field(ZRSV, "MINOR")
+	field(ONSV, "NO_ALARM")
+	field(TWSV, "NO_ALARM")
+	field(THSV, "NO_ALARM")
+	field(FRSV, "NO_ALARM")
+	field(FVSV, "MINOR")
+	field(SXSV, "NO_ALARM")
+	field(SVST, "NO_ALARM")
+	field(EIST, "NO_ALARM")
+	field(UNSV, "MINOR")
+}
+
+#---------------------------------------------------------------------------------------------------
