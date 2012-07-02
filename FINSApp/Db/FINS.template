@@ -58,7 +58,7 @@ record(mbbi, "$(device):MODE")
 	field(FRST, "Run")
 	field(FRSV, "MINOR")
 	field(NOBT, "3")
-	field(INP,  "$(device):CPU:MODE")
+	field(INP,  "$(device):CPU:MODE MS")
 }
 
 record(ai, "$(device):CPU:STATUS")
