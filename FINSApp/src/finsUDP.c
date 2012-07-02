@@ -2273,7 +2273,7 @@ static asynStatus ReadInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *val
 	}
 
 	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "ReadInt32Array: port %s, addr %d, read %d 32-bit words.\n", pdrvPvt->portName, addr, *nIn);
-
+	
 	return (asynSuccess);
 }
 
@@ -2359,13 +2359,13 @@ static asynStatus WriteInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *va
 /*** asynFloat32Array *****************************************************************************/
 
 /*
-	Read 32 bit values from the PLC which is encoded as IEEE floats
+	Read 32 bit values from the PLC which are encoded as IEEE floats
 */
 
 static asynStatus ReadFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 *value, size_t nelements, size_t *nIn)
 {
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
-	int addr, i;
+	int addr;
 	asynStatus status;
 	char *type = NULL;
 	
@@ -2437,15 +2437,8 @@ static asynStatus ReadFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 
 		return (asynError);
 	}
 
-/* convert from epicsInt32 to epicsFloat32 */
-
-	for (i = 0; i < nelements; i++)
-	{
-		value[i] = (epicsFloat32) value[i];
-	}
-
 	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "ReadFloat32Array: port %s, addr %d, read %d floats.\n", pdrvPvt->portName, addr, *nIn);
-
+	
 	return (asynSuccess);
 }
 
