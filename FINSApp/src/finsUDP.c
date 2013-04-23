@@ -301,9 +301,11 @@ enum FINS_COMMANDS
 	FINS_EXPLICIT
 };
 
+extern int errno;
+
 int finsUDPInit(const char *portName, const char *address)
 {
-	static char *FUNCNAME = "finsUDPInit";
+	static const char *FUNCNAME = "finsUDPInit";
 	drvPvt *pdrvPvt;
 	asynStatus status;
 	asynOctet *pasynOctet;
@@ -455,7 +457,7 @@ int finsUDPInit(const char *portName, const char *address)
 	if ((pdrvPvt->fd = epicsSocketCreate(PF_INET, SOCK_DGRAM, 0)) < 0)
 	{
 		printf("%s: Can't create socket: %s", FUNCNAME, strerror(SOCKERRNO));
-		return -1;
+		return (-1);
 	}
 
 	{
@@ -471,11 +473,13 @@ int finsUDPInit(const char *portName, const char *address)
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(0);
 
+		errno = 0;
+		
 		if (bind(pdrvPvt->fd, (struct sockaddr *) &addr, addrlen) < 0)
 		{
 			epicsSocketDestroy(pdrvPvt->fd);
 			
-			printf("%s: bind failed\n", FUNCNAME);
+			printf("%s: bind failed with %s.\n", FUNCNAME, strerror(errno));
 			return (-1);
 		}
 		
@@ -488,8 +492,15 @@ int finsUDPInit(const char *portName, const char *address)
 #else
 			socklen_t namelen;
 #endif			
-			getsockname(pdrvPvt->fd, (struct sockaddr *) &name, &namelen);
-
+			errno = 0;
+		
+			if (getsockname(pdrvPvt->fd, (struct sockaddr *) &name, &namelen) < 0)
+			{
+				printf("%s: getsockname failed with %s.\n", FUNCNAME, strerror(errno));
+				
+				return (-1);
+			}
+			
 			printf("%s: using port %d\n", FUNCNAME, name.sin_port);
 		}
 		
@@ -652,6 +663,7 @@ static void flushUDP(const char *func, drvPvt *pdrvPvt, asynUser *pasynUser)
 
 static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const size_t nelements, const epicsUInt16 address, size_t *transfered, size_t asynSize)
 {
+	static const char *FUNCNAME = "finsUDPread";
 	int recvlen, sendlen = 0;
 	const int addrlen = sizeof(struct sockaddr_in);
 
@@ -713,7 +725,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 				
 				default:
 				{
-					asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, bad switch.\n", pdrvPvt->portName);
+					asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, bad switch.\n", FUNCNAME, pdrvPvt->portName);
 					return (-1);
 				}
 			}
@@ -873,7 +885,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 			
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (-1);
 		}
 	}
@@ -884,15 +896,17 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 
 	flushUDP("finsUDPread", pdrvPvt, pasynUser);
 
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->message, sendlen, "finsUDPread: port %s, sending %d bytes.\n", pdrvPvt->portName, sendlen);
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->message, sendlen, "%s: port %s, sending %d bytes.\n", FUNCNAME, pdrvPvt->portName, sendlen);
 
 	epicsTimeGetCurrent(&ets);
 	
 /* send request */
 
+	errno = 0;
+	
 	if (sendto(pdrvPvt->fd, pdrvPvt->message, sendlen, 0, (struct sockaddr *) &pdrvPvt->addr, addrlen) != sendlen)
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, sendto() failed.\n", pdrvPvt->portName);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, sendto() failed with %s.\n", FUNCNAME, pdrvPvt->portName, strerror(errno));
 		return (-1);
 	}
 
@@ -918,11 +932,13 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 			tv.tv_usec = 0;
 		}
 
+		errno = 0;
+		
 		switch (select(pdrvPvt->fd + 1, &rfds, NULL, NULL, &tv))
 		{
 			case -1:
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, select() error.\n", pdrvPvt->portName);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, select() failed with %s.\n", FUNCNAME, pdrvPvt->portName, strerror(errno));
 	
 				return (-1);
 				break;
@@ -930,7 +946,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 			
 			case 0:
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, select() timeout.\n", pdrvPvt->portName);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, select() timeout.\n", FUNCNAME, pdrvPvt->portName);
 
 				return (-1);
 				break;
@@ -950,9 +966,11 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 #else
 		socklen_t iFromLen = 0;
 #endif
+		errno = 0;
+		
 		if ((recvlen = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen)) < 0)
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, recvfrom() error.\n", pdrvPvt->portName);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, recvfrom() with %s.\n", FUNCNAME, pdrvPvt->portName, strerror(errno));
 			return (-1);
 		}
 	}
@@ -968,19 +986,19 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		pdrvPvt->tLast = diff;
 	}
 	
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->reply, recvlen, "finsUDPread: port %s, received %d bytes.\n", pdrvPvt->portName, recvlen);
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->reply, recvlen, "%s: port %s, received %d bytes.\n", FUNCNAME, pdrvPvt->portName, recvlen);
 
 /* Illegal response length check */
 	
 	if (recvlen < MIN_RESP_LEN)
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, receive length too small.\n", pdrvPvt->portName);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, receive length too small.\n", FUNCNAME, pdrvPvt->portName);
 		return (-1);
 	}
 	
 	if ((pdrvPvt->message[DNA] != pdrvPvt->reply[SNA]) || (pdrvPvt->message[DA1] != pdrvPvt->reply[SA1]) || (pdrvPvt->message[DA2] != pdrvPvt->reply[SA2]))
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, illegal source address received.\n", pdrvPvt->portName);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, illegal source address received.\n", FUNCNAME, pdrvPvt->portName);
 		return (-1);
 	}
 
@@ -988,7 +1006,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 	
 	if (pdrvPvt->message[SID] != pdrvPvt->reply[SID])
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, SID %d sent, wrong SID %d received.\n", pdrvPvt->portName, pdrvPvt->message[SID], pdrvPvt->reply[SID]);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, SID %d sent, wrong SID %d received.\n", FUNCNAME, pdrvPvt->portName, pdrvPvt->message[SID], pdrvPvt->reply[SID]);
 		return (-1);
 	}
 
@@ -996,7 +1014,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 
 	if ((pdrvPvt->reply[MRC] != pdrvPvt->message[MRC]) || (pdrvPvt->reply[SRC] != pdrvPvt->message[SRC]))
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, wrong MRC/SRC received.\n", pdrvPvt->portName);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, wrong MRC/SRC received.\n", FUNCNAME, pdrvPvt->portName);
 		return (-1);
 	}
 
@@ -1004,7 +1022,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 
 	if ((pdrvPvt->reply[MRES] != 0x00) || (pdrvPvt->reply[SRES] != 0x00))
 	{
-		FINSerror(pdrvPvt, pasynUser, "finsUDPread", pdrvPvt->reply[MRES], pdrvPvt->reply[SRES]);
+		FINSerror(pdrvPvt, pasynUser, FUNCNAME, pdrvPvt->reply[MRES], pdrvPvt->reply[SRES]);
 		return (-1);
 	}
 
@@ -1033,7 +1051,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 					ptrd[i] = BSWAP16(ptrs[i]);
 				}
 					
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, %s %d 16-bit words.\n", pdrvPvt->portName, SWAPT, nelements);
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, %s %d 16-bit words.\n", FUNCNAME, pdrvPvt->portName, SWAPT, nelements);
 			}
 			else
 			
@@ -1049,7 +1067,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 					ptrd[i] = (epicsUInt32) BSWAP16(ptrs[i]);
 				}
 					
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, %s %d 16-bit word.\n", pdrvPvt->portName, SWAPT, nelements);
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, %s %d 16-bit word.\n", FUNCNAME, pdrvPvt->portName, SWAPT, nelements);
 			}
 			
 		/* check the number of elements received */
@@ -1078,7 +1096,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 				ptrd[i] = WSWAP32(ptrs[i]);
 			}
 				
-			asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPread: port %s, swapping %d 32-bit words.\n", pdrvPvt->portName, nelements);
+			asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, swapping %d 32-bit words.\n", FUNCNAME, pdrvPvt->portName, nelements);
 
 		/* check the number of elements received */
 		
@@ -1222,7 +1240,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPread: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (-1);
 		}
 	}
@@ -1236,6 +1254,7 @@ static int finsUDPread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, const s
 	
 static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, size_t nwords, const epicsUInt16 address, size_t asynSize)
 {
+	static const char *FUNCNAME = "finsUDPwrite";
 	int recvlen, sendlen;
 	const int addrlen = sizeof(struct sockaddr_in);
 
@@ -1297,7 +1316,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 				
 				default:
 				{
-					asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, bad switch.\n", pdrvPvt->portName);
+					asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, bad switch.\n", FUNCNAME, pdrvPvt->portName);
 					return (-1);
 				}
 			}
@@ -1326,7 +1345,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 					ptrd[i] = BSWAP16(ptrs[i]);
 				}
 
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, %s %d 16-bit words.\n", pdrvPvt->portName, SWAPT, nwords);
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, %s %d 16-bit words.\n", FUNCNAME, pdrvPvt->portName, SWAPT, nwords);
 			}
 			else
 			
@@ -1342,7 +1361,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 					ptrd[i] = BSWAP16((epicsUInt16) ptrs[i]);
 				}
 
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, %s %d 16-bit word.\n", pdrvPvt->portName, SWAPT, nwords);				
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, %s %d 16-bit word.\n", FUNCNAME, pdrvPvt->portName, SWAPT, nwords);				
 			}
 			
 			sendlen = COM + 6 + nwords * sizeof(short);
@@ -1414,7 +1433,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 					ptrd[i] = WSWAP32(ptrs[i]);
 				}
 				
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "finsUDPwrite: port %s, swapping %d 32-bit words.\n", pdrvPvt->portName, nwords >> 1);
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, swapping %d 32-bit words.\n", FUNCNAME, pdrvPvt->portName, nwords >> 1);
 			}
 
 			sendlen = COM + 6 + nwords * sizeof(short);
@@ -1437,7 +1456,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (-1);
 		}
 	}
@@ -1448,15 +1467,17 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 
 	flushUDP("finsUDPwrite", pdrvPvt, pasynUser);
 	
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->message, sendlen, "finsUDPwrite: port %s, sending %d bytes.\n", pdrvPvt->portName, sendlen);
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->message, sendlen, "%s: port %s, sending %d bytes.\n", FUNCNAME, pdrvPvt->portName, sendlen);
 	
 	epicsTimeGetCurrent(&ets);
 	
 /* send request */
+
+	errno = 0;
 	
 	if (sendto(pdrvPvt->fd, pdrvPvt->message, sendlen, 0, (struct sockaddr *) &pdrvPvt->addr, addrlen) != sendlen)
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, sendto() failed to send complete message.\n", pdrvPvt->portName);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, sendto() failed with %s.\n", FUNCNAME, pdrvPvt->portName, strerror(errno));
 		return (-1);
 	}
 
@@ -1482,11 +1503,13 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 			tv.tv_usec = 0;
 		}
 		
+		errno = 0;
+		
 		switch (select(pdrvPvt->fd + 1, &rfds, NULL, NULL, &tv))
 		{
 			case -1:
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, select() failed.\n", pdrvPvt->portName);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, select() failed with %s.\n", FUNCNAME, pdrvPvt->portName, strerror(errno));
 
 				return (-1);
 				break;
@@ -1494,7 +1517,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 			
 			case 0:
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, select() timeout.\n", pdrvPvt->portName);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, select() timeout.\n", FUNCNAME, pdrvPvt->portName);
 				
 				return (-1);
 				break;
@@ -1516,7 +1539,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 #endif
 		if ((recvlen = recvfrom(pdrvPvt->fd, pdrvPvt->reply, FINS_MAX_MSG, 0, &from_addr, &iFromLen)) < 0)
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, recvfrom() error.\n", pdrvPvt->portName);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, recvfrom() error.\n", FUNCNAME, pdrvPvt->portName);
 			return (-1);
 		}
 	}
@@ -1532,19 +1555,19 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 		pdrvPvt->tLast = diff;
 	}
 	
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->reply, recvlen, "finsUDPwrite: port %s, received %d bytes.\n", pdrvPvt->portName, recvlen);
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pdrvPvt->reply, recvlen, "%s: port %s, received %d bytes.\n", FUNCNAME, pdrvPvt->portName, recvlen);
 
 /* Illegal response length check */
 	
 	if (recvlen < MIN_RESP_LEN)
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, receive length too small.\n", pdrvPvt->portName);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, receive length too small.\n", FUNCNAME, pdrvPvt->portName);
 		return (-1);
 	}
 	
 	if ((pdrvPvt->message[DNA] != pdrvPvt->reply[SNA]) || (pdrvPvt->message[DA1] != pdrvPvt->reply[SA1]) || (pdrvPvt->message[DA2] != pdrvPvt->reply[SA2]))
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, illegal source address received.\n", pdrvPvt->portName);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, illegal source address received.\n", FUNCNAME, pdrvPvt->portName);
 		return (-1);
 	}
 
@@ -1552,7 +1575,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 	
 	if (pdrvPvt->message[SID] != pdrvPvt->reply[SID])
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, wrong SID received.\n", pdrvPvt->portName);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, wrong SID received.\n", FUNCNAME, pdrvPvt->portName);
 		return (-1);
 	}
 
@@ -1560,7 +1583,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 
 	if ((pdrvPvt->reply[MRC] != pdrvPvt->message[MRC]) || (pdrvPvt->reply[SRC] != pdrvPvt->message[SRC]))
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "finsUDPwrite: port %s, wrong MRC/SRC received.\n", pdrvPvt->portName);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, wrong MRC/SRC received.\n", FUNCNAME, pdrvPvt->portName);
 		return (-1);
 	}
 
@@ -1568,7 +1591,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 
 	if ((pdrvPvt->reply[MRES] != 0x00) || (pdrvPvt->reply[SRES] != 0x00))
 	{
-		FINSerror(pdrvPvt, pasynUser, "finsUDPwrite", pdrvPvt->reply[MRES], pdrvPvt->reply[SRES]);
+		FINSerror(pdrvPvt, pasynUser, FUNCNAME, pdrvPvt->reply[MRES], pdrvPvt->reply[SRES]);
 		return (-1);
 	}
 
@@ -1585,6 +1608,7 @@ static int finsUDPwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *data, 
 
 static asynStatus udpRead(void *pvt, asynUser *pasynUser, char *data, size_t maxchars, size_t *nbytesTransfered, int *eomReason)
 {
+	static const char *FUNCNAME = "udpRead";
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
@@ -1610,7 +1634,7 @@ static asynStatus udpRead(void *pvt, asynUser *pasynUser, char *data, size_t max
 			
 			if (maxchars < FINS_MODEL_LENGTH)
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "udpRead: port %s, addr %d, length is not >= %d for FINS_MODEL\n", pdrvPvt->portName, addr, FINS_MODEL_LENGTH);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, length is not >= %d for FINS_MODEL\n", FUNCNAME, pdrvPvt->portName, addr, FINS_MODEL_LENGTH);
 				return (asynError);
 			}
 			
@@ -1621,12 +1645,12 @@ static asynStatus udpRead(void *pvt, asynUser *pasynUser, char *data, size_t max
 	
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "udpRead: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACE_FLOW, "udpRead: port %s, addr %d, %s\n", pdrvPvt->portName, addr, type);
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
 
 /* send FINS request */
 
@@ -1640,7 +1664,7 @@ static asynStatus udpRead(void *pvt, asynUser *pasynUser, char *data, size_t max
 		*eomReason |= ASYN_EOM_END;
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "udpRead: port %s, addr %d, read %d bytes.\n", pdrvPvt->portName, addr, *nbytesTransfered);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %d bytes.\n", FUNCNAME, pdrvPvt->portName, addr, *nbytesTransfered);
 
    	return (asynSuccess);
 }
@@ -1663,6 +1687,7 @@ static asynStatus udpRead(void *pvt, asynUser *pasynUser, char *data, size_t max
 
 static asynStatus udpWrite(void *pvt, asynUser *pasynUser, const char *data, size_t numchars, size_t *nbytesTransfered)
 {
+	static const char *FUNCNAME = "udpWrite";
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
@@ -1690,12 +1715,12 @@ static asynStatus udpWrite(void *pvt, asynUser *pasynUser, const char *data, siz
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "udpWrite: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACE_FLOW, "udpWrite: port %s, addr %d, %s\n", pdrvPvt->portName, addr, type);
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
 	
 /* form FINS message and send data */
 	
@@ -1708,7 +1733,7 @@ static asynStatus udpWrite(void *pvt, asynUser *pasynUser, const char *data, siz
 
 	*nbytesTransfered = numchars;
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "udpRead: port %s, addr %d, wrote %d bytes.\n", pdrvPvt->portName, addr, numchars);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %d bytes.\n", FUNCNAME, pdrvPvt->portName, addr, numchars);
 
    	return (asynSuccess);
 }
@@ -1717,6 +1742,7 @@ static asynStatus udpWrite(void *pvt, asynUser *pasynUser, const char *data, siz
 
 static asynStatus ReadInt32(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 {
+	static const char *FUNCNAME = "ReadInt32";
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
@@ -1821,18 +1847,18 @@ static asynStatus ReadInt32(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 		case FINS_IO_WRITE_32_NOREAD:
 		case FINS_AR_WRITE_32_NOREAD:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_FLOW, "ReadInt32: port %s, addr %d, WRITE_NOREAD\n", pdrvPvt->portName, addr);
+			asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, WRITE_NOREAD\n", FUNCNAME, pdrvPvt->portName, addr);
 			return (asynError);
 		}
 
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt32: port %s, addr %d, no such command %d.\n", pdrvPvt->portName, addr, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, no such command %d.\n", FUNCNAME, pdrvPvt->portName, addr, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACE_FLOW, "ReadInt32: port %s, addr %d, %s\n", pdrvPvt->portName, addr, type);
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
 
 /* send FINS request */
 
@@ -1841,13 +1867,14 @@ static asynStatus ReadInt32(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "ReadInt32: port %s, addr %d, read 1 word.\n", pdrvPvt->portName, addr);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read 1 word.\n", FUNCNAME, pdrvPvt->portName, addr);
 
 	return (asynSuccess);
 }
 
 static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 {
+	static const char *FUNCNAME = "WriteInt32";
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
@@ -1944,12 +1971,12 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteInt32: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACE_FLOW, "WriteInt32: port %s, addr %d, %s\n", pdrvPvt->portName, addr, type);
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
 	
 	switch (pasynUser->reason)
 	{
@@ -1992,12 +2019,12 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteInt32: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "WriteInt32: port %s, addr %d, wrote 1 word.\n", pdrvPvt->portName, addr);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote 1 word.\n", FUNCNAME, pdrvPvt->portName, addr);
 
 	return (asynSuccess);
 }
@@ -2006,6 +2033,7 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 
 static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *value, size_t nelements, size_t *nIn)
 {
+	static const char *FUNCNAME = "ReadInt16Array";
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
@@ -2047,12 +2075,12 @@ static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *val
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt16Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACE_FLOW, "ReadInt16Array: port %s, addr %d, %s\n", pdrvPvt->portName, addr, type);
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
 
 	switch (pasynUser->reason)
 	{
@@ -2062,7 +2090,7 @@ static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *val
 		{
 			if (nelements > FINS_MAX_WORDS)
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt16Array: port %s, addr %d, request too big.\n", pdrvPvt->portName, addr);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, request too big.\n", FUNCNAME, pdrvPvt->portName, addr);
 				return (asynError);
 			}
 			
@@ -2073,7 +2101,7 @@ static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *val
 		{
 			if (nelements != 7)
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt16Array: port %s, addr %d, FINS_CLOCK_READ size != 7.\n", pdrvPvt->portName, addr);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, FINS_CLOCK_READ size != 7.\n", FUNCNAME, pdrvPvt->portName, addr);
 				return (asynError);
 			}
 			
@@ -2082,7 +2110,7 @@ static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *val
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt16Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
@@ -2095,13 +2123,14 @@ static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *val
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "ReadInt16Array: port %s, addr %d, read %d 16-bit words.\n", pdrvPvt->portName, addr, *nIn);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %d 16-bit words.\n", FUNCNAME, pdrvPvt->portName, addr, *nIn);
 
 	return (asynSuccess);
 }
 
 static asynStatus WriteInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *value, size_t nelements)
 {
+	static const char *FUNCNAME = "WriteInt16Array";
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
@@ -2137,12 +2166,12 @@ static asynStatus WriteInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *va
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteInt16Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACE_FLOW, "WriteInt16Array: port %s, addr %d, %s\n", pdrvPvt->portName, addr, type);
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
 
 	switch (pasynUser->reason)
 	{
@@ -2152,7 +2181,7 @@ static asynStatus WriteInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *va
 		{
 			if (nelements > FINS_MAX_WORDS)
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteInt16Array: port %s, addr %d, request too big.\n", pdrvPvt->portName, addr);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, request too big.\n", FUNCNAME, pdrvPvt->portName, addr);
 				return (asynError);
 			}
 			
@@ -2161,7 +2190,7 @@ static asynStatus WriteInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *va
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteInt16Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
@@ -2173,7 +2202,7 @@ static asynStatus WriteInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *va
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "WriteInt16Array: port %s, addr %d, wrote %d 16-bit words.\n", pdrvPvt->portName, addr, nelements);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %d 16-bit words.\n", FUNCNAME, pdrvPvt->portName, addr, nelements);
 
 	return (asynSuccess);
 }
@@ -2182,6 +2211,7 @@ static asynStatus WriteInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *va
 
 static asynStatus ReadInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *value, size_t nelements, size_t *nIn)
 {
+	static const char *FUNCNAME = "ReadInt32Array";
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
@@ -2224,12 +2254,12 @@ static asynStatus ReadInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *val
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt32Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACE_FLOW, "ReadInt32Array: port %s, addr %d, %s\n", pdrvPvt->portName, addr, type);
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
 
 	switch (pasynUser->reason)
 	{
@@ -2239,7 +2269,7 @@ static asynStatus ReadInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *val
 		{
 			if ((nelements * 2) > FINS_MAX_WORDS)
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt32Array: port %s, addr %d, request too big\n", pdrvPvt->portName, addr);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, request too big\n", FUNCNAME, pdrvPvt->portName, addr);
 				return (asynError);
 			}
 			
@@ -2250,7 +2280,7 @@ static asynStatus ReadInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *val
 		{
 			if (nelements != 3)
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt16Array: port %s, addr %d, request %d too small.\n", pdrvPvt->portName, addr, nelements);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, request %d too small.\n", FUNCNAME, pdrvPvt->portName, addr, nelements);
 				return (asynError);
 			}
 			
@@ -2259,7 +2289,7 @@ static asynStatus ReadInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *val
 
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadInt32Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
@@ -2272,13 +2302,14 @@ static asynStatus ReadInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *val
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "ReadInt32Array: port %s, addr %d, read %d 32-bit words.\n", pdrvPvt->portName, addr, *nIn);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %d 32-bit words.\n", FUNCNAME, pdrvPvt->portName, addr, *nIn);
 	
 	return (asynSuccess);
 }
 
 static asynStatus WriteInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *value, size_t nelements)
 {
+	static const char *FUNCNAME = "WriteInt32Array";
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
@@ -2315,12 +2346,12 @@ static asynStatus WriteInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *va
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteInt32Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACE_FLOW, "WriteInt32Array: port %s, addr %d, %s\n", pdrvPvt->portName, addr, type);
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
 
 	switch (pasynUser->reason)
 	{
@@ -2330,7 +2361,7 @@ static asynStatus WriteInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *va
 		{
 			if ((nelements * 2) > FINS_MAX_WORDS)
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteInt32Array: port %s, addr %d, request too big.\n", pdrvPvt->portName, addr);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, request too big.\n", FUNCNAME, pdrvPvt->portName, addr);
 				return (asynError);
 			}
 			
@@ -2339,7 +2370,7 @@ static asynStatus WriteInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *va
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteInt32Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
@@ -2351,7 +2382,7 @@ static asynStatus WriteInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *va
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "WriteInt32Array: port %s, addr %d, wrote %d 32-bit words.\n", pdrvPvt->portName, addr, nelements);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %d 32-bit words.\n", FUNCNAME, pdrvPvt->portName, addr, nelements);
 
 	return (asynSuccess);
 }
@@ -2364,6 +2395,7 @@ static asynStatus WriteInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *va
 
 static asynStatus ReadFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 *value, size_t nelements, size_t *nIn)
 {
+	static const char *FUNCNAME = "ReadFloat32Array";
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
@@ -2400,12 +2432,12 @@ static asynStatus ReadFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadFloat32Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACE_FLOW, "ReadFloat32Array: port %s, addr %d, %s\n", pdrvPvt->portName, addr, type);
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
 
 	switch (pasynUser->reason)
 	{
@@ -2415,7 +2447,7 @@ static asynStatus ReadFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 
 		{
 			if ((nelements * 2) > FINS_MAX_WORDS)
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadFloat32Array: port %s, addr %d, request too big.\n", pdrvPvt->portName, addr);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, request too big.\n", FUNCNAME, pdrvPvt->portName, addr);
 				return (asynError);
 			}
 			
@@ -2424,7 +2456,7 @@ static asynStatus ReadFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "ReadFloat32Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
@@ -2437,13 +2469,14 @@ static asynStatus ReadFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "ReadFloat32Array: port %s, addr %d, read %d floats.\n", pdrvPvt->portName, addr, *nIn);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %d floats.\n", FUNCNAME, pdrvPvt->portName, addr, *nIn);
 	
 	return (asynSuccess);
 }
 
 static asynStatus WriteFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 *value, size_t nelements)
 {
+	static const char *FUNCNAME = "WriteFloat32Array";
 	drvPvt *pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
@@ -2480,12 +2513,12 @@ static asynStatus WriteFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32
 
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteFloat32Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
 
-	asynPrint(pasynUser, ASYN_TRACE_FLOW, "WriteFloat32Array: port %s, addr %d, %s\n", pdrvPvt->portName, addr, type);
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
 
 	switch (pasynUser->reason)
 	{
@@ -2495,7 +2528,7 @@ static asynStatus WriteFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32
 		{
 			if ((nelements * 2) > FINS_MAX_WORDS)
 			{
-				asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteFloat32Array: port %s, addr %d, request too big.\n", pdrvPvt->portName, addr);
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, request too big.\n", FUNCNAME, pdrvPvt->portName, addr);
 				return (asynError);
 			}
 			
@@ -2504,7 +2537,7 @@ static asynStatus WriteFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32
 		
 		default:
 		{
-			asynPrint(pasynUser, ASYN_TRACE_ERROR, "WriteFloat32Array: port %s, no such command %d.\n", pdrvPvt->portName, pasynUser->reason);
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
 		}
 	}
@@ -2516,7 +2549,7 @@ static asynStatus WriteFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "WriteFloat32Array: port %s, addr %d, wrote %d floats.\n", pdrvPvt->portName, addr, nelements);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %d floats.\n", FUNCNAME, pdrvPvt->portName, addr, nelements);
 
 	return (asynSuccess);
 }
@@ -2715,6 +2748,13 @@ static const char *error40 = "Abort error";
 
 static void FINSerror(drvPvt *pdrvPvt, asynUser *pasynUser, const char *name, const unsigned char mres, const unsigned char sres)
 {
+	if (mres & 0x80)
+	{
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Relay Error Flag\n", name, pdrvPvt->portName);
+		
+		FINSerror(pdrvPvt, pasynUser, name, mres ^ 0x80, sres);
+	}
+	
 	switch (mres)
 	{
 		case 0x01:
@@ -2870,7 +2910,7 @@ int finsTest(char *address)
 	
 	if (fd < 0)
 	{
-		perror("socket");
+		perror("finsTest: socket");
 		return (-1);
 	}
 	
@@ -2886,7 +2926,7 @@ int finsTest(char *address)
 
 	if (bind(fd, (struct sockaddr *) &addr, addrlen) < 0)
 	{
-		perror("bind failed");
+		perror("finsTest: bind failed");
 		
 		close(fd);
 		return (-1);
@@ -2903,7 +2943,7 @@ int finsTest(char *address)
 #endif			
 		getsockname(fd, (struct sockaddr *) &name, &namelen);
 
-		printf("port %d bound\n", name.sin_port);
+		printf("finsTest: port %d bound\n", name.sin_port);
 	}
 	
 /* destination port address used later in sendto() */
@@ -2920,7 +2960,7 @@ int finsTest(char *address)
 	if (aToIPAddr(address, FINS_UDP_PORT, &addr) < 0)
 	{
 		close(fd);
-		printf("Bad IP address %s\n", address);
+		printf("finsTest: Bad IP address %s\n", address);
 		return (-1);
 	}
 
@@ -2961,8 +3001,7 @@ int finsTest(char *address)
 
 	if (sendto(fd, message, sendlen, 0, (struct sockaddr *) &addr, addrlen) != sendlen)
 	{
-		perror("sendto");
-		printf("failed to send complete message\n");
+		perror("finsTest: sendto");
 		close(fd);
 		return (-1);
 	}
@@ -2985,7 +3024,7 @@ int finsTest(char *address)
 		{
 			case -1:
 			{
-				printf("finsUDPread: select() error = %d\n", -1);
+				perror("finsTest: select");
 	
 				return (-1);
 				break;
@@ -2993,7 +3032,7 @@ int finsTest(char *address)
 			
 			case 0:
 			{
-				printf("finsUDPread: select() timeout\n");
+				perror("finsTest: select");
 
 				return (-1);
 				break;
@@ -3015,7 +3054,7 @@ int finsTest(char *address)
 #endif
 		if ((recvlen = recvfrom(fd, message, FINS_MAX_MSG, 0, &from_addr, &iFromLen)) < 0)
 		{
-			perror("recvfrom");
+			perror("finsTest: recvfrom");
 			close(fd);
 			return (-1);
 		}
@@ -3036,13 +3075,20 @@ int finsTest(char *address)
 	
 	if (recvlen < MIN_RESP_LEN)
 	{
-		puts("finsUDPread: receive length too small.");
+		puts("finsTest: receive length too small.");
 	}
 
 /* check response code */
 
 	if ((message[MRES] != 0x00) || (message[SRES] != 0x00))
 	{
+		if (message[MRES] & 0x80)
+		{
+			puts("finsTest: Relay Error Flag set");
+			
+			message[MRES] ^= 0x80;
+		}
+		
 		switch (message[MRES])
 		{
 			case 0x01:
