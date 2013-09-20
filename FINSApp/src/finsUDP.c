@@ -488,9 +488,9 @@ int finsUDPInit(const char *portName, const char *address)
 		{
 			struct sockaddr_in name;
 #ifdef vxWorks
-			int namelen;
+			int namelen = sizeof(name);
 #else
-			socklen_t namelen;
+			socklen_t namelen = sizeof(name);
 #endif			
 			errno = 0;
 		
