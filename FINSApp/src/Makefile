@@ -10,6 +10,7 @@ LIBRARY_IOC += FINS
 
 # xxxRecord.dbd will be installed into <top>/dbd
 DBD += finsUDP.dbd
+DBD += finsHostlink.dbd
 
 # The following are compiled and added to the support library
 FINS_SRCS += finsUDP.c
