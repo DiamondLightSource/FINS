@@ -10,8 +10,7 @@
 	
 	Testing with our CJ1_CPU12s shows a maximum receive data length of 268 words 
 		1099 bytes total (header 23, terminator 4), data length 1072 bytes (maximum 1076)
-		
-	
+
 	Interfaces:
 	
 		asynOctet
@@ -139,6 +138,17 @@
 
 #include <osiSock.h>
 
+#define BESWAP32(a)	(((a) & 0x0000ffff) << 16) | (((a) & 0xffff0000) >> 16)
+#define LESWAP32(a)	(((a) & 0x00ff00ff) <<  8) | (((a) & 0xff00ff00) >>  8)
+
+#undef WSWAP32
+
+#if (EPICS_BYTE_ORDER == EPICS_ENDIAN_LITTLE)
+	#define WSWAP32 LESWAP32
+#else
+	#define WSWAP32 BESWAP32
+#endif
+
 /* PLC memory  types */
 
 #define DM	"82"
@@ -159,7 +169,7 @@
 
 /* constants */
 
-#define FINS_MAX_WORDS		500
+#define FINS_MAX_WORDS		268
 #define FINS_MAX_MSG		((FINS_MAX_WORDS) * 2 + 100)
 #define FINS_TIMEOUT		1
 #define FINS_MODEL_LENGTH	20
@@ -844,7 +854,7 @@ static int finsHostlinkread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, co
 		
 		case FINS_MODEL:
 		{
-			sprintf(pdrvPvt->message, "%s%s%04d", header, "0502", address);
+			sprintf(pdrvPvt->message, "%s%s%02d01", header, "0502", address);
 			break;
 		}
 		
@@ -935,65 +945,6 @@ static int finsHostlinkread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, co
 		return (-1);
 	}
 
-#if 0
-	switch (pasynUser->reason)
-	{
-		case FINS_DM_READ:
-		case FINS_AR_READ:
-		case FINS_IO_READ:
-		case FINS_DM_WRITE:
-		case FINS_AR_WRITE:
-		case FINS_IO_WRITE:
-		{
-			break;
-		}
-
-		case FINS_DM_READ_32:
-		case FINS_AR_READ_32:
-		case FINS_IO_READ_32:
-		case FINS_DM_WRITE_32:
-		case FINS_AR_WRITE_32:
-		case FINS_IO_WRITE_32:
-		{		
-			break;
-		}
-		
-/* return a string of 20 chars */
-
-		case FINS_MODEL:
-		{
-			break;
-		}
-
-		case FINS_CPU_STATUS:
-		case FINS_CPU_MODE:
-		{
-			break;
-		}
-
-		case FINS_CYCLE_TIME:
-		{
-			break;
-		}
-		
-		case FINS_CYCLE_TIME_MEAN:
-		case FINS_CYCLE_TIME_MAX:
-		case FINS_CYCLE_TIME_MIN:
-		{
-			break;
-		}
-
-		case FINS_CLOCK_READ:
-		{
-			break;
-		}
-		
-		default:
-		{
-			break;
-		}
-	}
-#endif
 	if (extractAndCompareChecksum(pdrvPvt, recvlen - 4) < 0)
 	{
 		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, checksum error.\n", FUNCNAME, pdrvPvt->portName);
@@ -1071,7 +1022,7 @@ static int finsHostlinkread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, co
 			break;
 		}
 		
-/* return a string of 20 chars */
+/* return a string of 20 chars - each character byte encoded as two hex characters so space = ASCII(2) + ASCII(0) */
 
 		case FINS_MODEL:
 		{
@@ -1079,7 +1030,7 @@ static int finsHostlinkread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, co
 			char *ptrs = (char *) &pdrvPvt->reply[RESP + 4];
 			char *ptrd = (char *) data;
 			
-			for (i = 0; i < 20; i++)
+			for (i = 0; i < FINS_MODEL_LENGTH; i++)
 			{
 				short c;
 				
@@ -1099,7 +1050,7 @@ static int finsHostlinkread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, co
 
 		case FINS_CPU_STATUS:
 		{
-			sscanf(&pdrvPvt->reply[RESP + 0], "%4x", (unsigned int *) data);
+			sscanf(&pdrvPvt->reply[RESP + 0], "%2x", (unsigned int *) data);
 			
 			if (transfered)
 			{
@@ -1113,7 +1064,7 @@ static int finsHostlinkread(drvPvt *pdrvPvt, asynUser *pasynUser, void *data, co
 
 		case FINS_CPU_MODE:
 		{
-			sscanf(&pdrvPvt->reply[RESP + 1], "%4x", (unsigned int *) data);
+			sscanf(&pdrvPvt->reply[RESP + 2], "%2x", (unsigned int *) data);
 
 			if (transfered)
 			{
@@ -1239,21 +1190,21 @@ static int finsHostlinkwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *d
 				case FINS_DM_WRITE:
 				case FINS_DM_WRITE_NOREAD:
 				{
-					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04u", header, DM, address, (unsigned int) nwords);
+					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04x", header, DM, address, (unsigned int) nwords);
 					break;
 				}
 				
 				case FINS_AR_WRITE:
 				case FINS_AR_WRITE_NOREAD:
 				{
-					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04u", header, AR, address, (unsigned int) nwords);
+					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04x", header, AR, address, (unsigned int) nwords);
 					break;
 				}
 				
 				case FINS_IO_WRITE:
 				case FINS_IO_WRITE_NOREAD:
 				{
-					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04u", header, IO, address, (unsigned int) nwords);
+					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04x", header, IO, address, (unsigned int) nwords);
 					break;
 				}
 				
@@ -1309,21 +1260,21 @@ static int finsHostlinkwrite(drvPvt *pdrvPvt, asynUser *pasynUser, const void *d
 				case FINS_DM_WRITE_32:
 				case FINS_DM_WRITE_32_NOREAD:
 				{
-					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04u", header, DM, address,(unsigned int)  nwords);
+					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04x", header, DM, address,(unsigned int)  nwords);
 					break;
 				}
 				
 				case FINS_AR_WRITE_32:
 				case FINS_AR_WRITE_32_NOREAD:
 				{
-					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04u", header, AR, address, (unsigned int) nwords);
+					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04x", header, AR, address, (unsigned int) nwords);
 					break;
 				}
 				
 				case FINS_IO_WRITE_32:
 				case FINS_IO_WRITE_32_NOREAD:
 				{
-					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04u", header, IO, address, (unsigned int) nwords);
+					sprintf(pdrvPvt->message, "%s" "0102"  "%s" "%04u" "00" "%04x", header, IO, address, (unsigned int) nwords);
 					break;
 				}
 				
@@ -2350,6 +2301,19 @@ static asynStatus ReadFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 
 		return (asynError);
 	}
 
+/* Need to perform word swapping */
+
+	{
+		int i;
+		
+		for (i = 0; i < nelements; i++)
+		{
+			unsigned int *p = (unsigned int *) &value[i];
+			
+			*p = WSWAP32(*p);
+		}
+	}
+
 	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %d floats.\n", FUNCNAME, pdrvPvt->portName, addr, (int) *nIn);
 	
 	return (asynSuccess);
@@ -2420,6 +2384,19 @@ static asynStatus WriteFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32
 		{
 			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
 			return (asynError);
+		}
+	}
+
+/* Need to perform word swapping */
+
+	{
+		int i;
+		
+		for (i = 0; i < nelements; i++)
+		{
+			unsigned int *p = (unsigned int *) &value[i];
+			
+			*p = WSWAP32(*p);
 		}
 	}
 	
