@@ -66,10 +66,16 @@ during record initialisation. Performing the inital read is asyn's method of bum
 Initialisation
 --------------
 
-finsUDPInit(portName, <PLC's IP address>)
+To send FINS commands using UDP over Ethernet:
 
-Usage
------
+    finsUDPInit(portName, <PLC's IP address>)
+
+To send FINS commands using Hostlink to a serial device:
+
+    finsHostlinkInit(portName, <serial device>)
+
+finsUDP
+-------
 
 * The EPICS IOC's node address is set to 254.
 
@@ -82,7 +88,12 @@ Usage
 * A funtion finsTest("<ip address>") sends a FINS data memory read request for two words from
   address 100 to the specified IP address.
 
-Examples
---------
+finsHostlink
+------------
+
+* The serial device must be a vxWorks device, e.g. /ty/40/5
+
+* Transfers are limited to 268 16-bit words maximum.
+
 
 FINS.template illustrates how to configure records.
