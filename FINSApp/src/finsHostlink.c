@@ -128,6 +128,7 @@
 #include <asynDrvUser.h>
 #include <asynOctet.h>
 #include <asynInt32.h>
+#include <asynFloat64.h>
 #include <asynInt16Array.h>
 #include <asynInt32Array.h>
 #include <asynFloat32Array.h>
@@ -186,6 +187,7 @@ typedef struct drvPvt
 	asynInterface drvUser;
 	asynInterface octet;
 	asynInterface int32;
+	asynInterface float64;
 	asynInterface int16Array;
 	asynInterface int32Array;
 	asynInterface float32Array;
@@ -226,6 +228,13 @@ static asynStatus ReadInt32(void *drvPvt, asynUser *pasynUser, epicsInt32 *value
 
 static asynInt32 ifaceInt32 = { WriteInt32, ReadInt32, NULL, NULL, NULL};
 
+/*** asynFloat64 methods **************************************************************************/
+
+static asynStatus WriteFloat64(void *drvPvt, asynUser *pasynUser, epicsFloat64 value);
+static asynStatus ReadFloat64(void *drvPvt, asynUser *pasynUser, epicsFloat64 *value);
+
+static asynFloat64 ifaceFloat64 = { WriteFloat64, ReadFloat64, NULL, NULL};
+
 /*** asynInt16Array methods ***********************************************************************/
 
 static asynStatus WriteInt16Array(void *drvPvt, asynUser *pasynUser, epicsInt16 *value, size_t nelements);
@@ -250,8 +259,10 @@ static asynFloat32Array ifaceFloat32Array = { WriteFloat32Array, ReadFloat32Arra
 /*** asynDrvUser **********************************************************************************/
 
 static asynStatus drvUserCreate (void *drvPvt, asynUser *pasynUser, const char *drvInfo, const char **pptypeName, size_t *psize);
+static asynStatus drvUserGetType(void *drvPvt, asynUser *pasynUser, const char **pptypeName, size_t *psize);
+static asynStatus drvUserDestroy(void *drvPvt,asynUser *pasynUser);
 
-static asynDrvUser ifaceDrvUser = { drvUserCreate, NULL, NULL };
+static asynDrvUser ifaceDrvUser = { drvUserCreate, drvUserGetType, drvUserDestroy};
 
 /**************************************************************************************************/
 
@@ -298,12 +309,6 @@ int finsHostlinkInit(const char *portName, const char *dev)
 	
 	pasynOctet = callocMustSucceed(1, sizeof(asynOctet), FUNCNAME);
 	
-/* asynCommon */
-
-	pdrvPvt->common.interfaceType = asynCommonType;
-	pdrvPvt->common.pinterface = (void *) &asyn;
-	pdrvPvt->common.drvPvt = pdrvPvt;
-
 	status = pasynManager->registerPort(portName, ASYN_MULTIDEVICE | ASYN_CANBLOCK, 1, 0, 0);
 
 	if (status != asynSuccess)
@@ -312,7 +317,11 @@ int finsHostlinkInit(const char *portName, const char *dev)
 		return (-1);
 	}
 	
-/* common */
+/* asynCommon */
+
+	pdrvPvt->common.interfaceType = asynCommonType;
+	pdrvPvt->common.pinterface = (void *) &asyn;
+	pdrvPvt->common.drvPvt = pdrvPvt;
 
 	status = pasynManager->registerInterface(portName, &pdrvPvt->common);
 	
@@ -375,6 +384,20 @@ int finsHostlinkInit(const char *portName, const char *dev)
 	if (status != asynSuccess)
 	{
 		printf("%s: registerInterface asynInt32 failed\n", FUNCNAME);
+		return (-1);
+	}
+	
+/* asynFloat64 */
+
+	pdrvPvt->float64.interfaceType = asynFloat64Type;
+	pdrvPvt->float64.pinterface = &ifaceFloat64;
+	pdrvPvt->float64.drvPvt = pdrvPvt;
+	
+	status = pasynFloat64Base->initialize(portName, &pdrvPvt->float64);
+		
+	if (status != asynSuccess)
+	{
+		printf("%s: registerInterface asynFloat64 failed\n", FUNCNAME);
 		return (-1);
 	}
 	
@@ -1861,6 +1884,235 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 	return (asynSuccess);
 }
 
+/*** asynFloat64 **********************************************************************************/
+
+static asynStatus ReadFloat64(void *pvt, asynUser *pasynUser, epicsFloat64 *value)
+{
+	static const char * const FUNCNAME = "ReadFloat64";
+	drvPvt *pdrvPvt = (drvPvt *) pvt;
+	int addr;
+	asynStatus status;
+	char *type = NULL;
+	
+	status = pasynManager->getAddr(pasynUser, &addr);
+	
+	if (status != asynSuccess)
+	{
+		return (status);
+	}
+
+/* check reason */
+
+	switch (pasynUser->reason)
+	{
+		case FINS_DM_READ:
+		{
+			type = "FINS_DM_READ";
+			break;
+		}
+		
+		case FINS_AR_READ:
+		{
+			type = "FINS_AR_READ";
+			break;
+		}
+		
+		case FINS_IO_READ:
+		{
+			type = "FINS_IO_READ";
+			break;
+		}
+		
+		case FINS_DM_READ_32:
+		{
+			type = "FINS_DM_READ_32";
+			break;
+		}
+		
+		case FINS_AR_READ_32:
+		{
+			type = "FINS_AR_READ_32";
+			break;
+		}
+		
+		case FINS_IO_READ_32:
+		{
+			type = "FINS_IO_READ_32";
+			break;
+		}
+		
+		case FINS_CYCLE_TIME_MEAN:
+		{
+			type = "FINS_CYCLE_TIME_MEAN";
+			break;
+		}
+		
+		case FINS_CYCLE_TIME_MAX:
+		{
+			type = "FINS_CYCLE_TIME_MAX";
+			break;
+		}
+		
+		case FINS_CYCLE_TIME_MIN:
+		{
+			type = "FINS_CYCLE_TIME_MIN";
+			break;
+		}
+		
+		case FINS_CPU_STATUS:
+		{
+			type = "FINS_CPU_STATUS";
+			break;
+		}
+		
+		case FINS_CPU_MODE:
+		{
+			type = "FINS_CPU_MODE";
+			break;
+		}
+
+	/* this gets called at initialisation by write methods */
+	
+		case FINS_DM_WRITE:
+		case FINS_IO_WRITE:
+		case FINS_AR_WRITE:
+		case FINS_CT_WRITE:
+		case FINS_DM_WRITE_32:
+		case FINS_IO_WRITE_32:
+		case FINS_AR_WRITE_32:
+		case FINS_CT_WRITE_32:
+		{
+			type = "WRITE";
+			break;
+		}
+
+		case FINS_DM_WRITE_NOREAD:
+		case FINS_IO_WRITE_NOREAD:
+		case FINS_AR_WRITE_NOREAD:
+		case FINS_DM_WRITE_32_NOREAD:
+		case FINS_IO_WRITE_32_NOREAD:
+		case FINS_AR_WRITE_32_NOREAD:
+		{
+			asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, WRITE_NOREAD\n", FUNCNAME, pdrvPvt->portName, addr);
+			return (asynError);
+		}
+
+		default:
+		{
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, no such command %d.\n", FUNCNAME, pdrvPvt->portName, addr, pasynUser->reason);
+			return (asynError);
+		}
+	}
+
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
+
+/* send FINS request */
+
+	{
+		volatile epicsFloat32 val;
+		volatile epicsUInt32 * const v = (epicsUInt32 *) &val;
+		
+		if (finsHostlinkread(pdrvPvt, pasynUser, (void *) &val, sizeof(epicsInt32) / sizeof(epicsInt16), addr, NULL, sizeof(epicsUInt32)) < 0)
+		{
+			return (asynError);
+		}
+
+		*v = WSWAP32(*v);
+			
+		*value = (epicsFloat64) val;
+	}
+	
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read 1 word.\n", FUNCNAME, pdrvPvt->portName, addr);
+
+	return (asynSuccess);
+}
+
+static asynStatus WriteFloat64(void *pvt, asynUser *pasynUser, epicsFloat64 value)
+{
+	static const char * const FUNCNAME = "WriteFloat64";
+	drvPvt *pdrvPvt = (drvPvt *) pvt;
+	int addr;
+	asynStatus status;
+	char *type = NULL;
+	
+	status = pasynManager->getAddr(pasynUser, &addr);
+	
+	if (status != asynSuccess)
+	{
+		return (status);
+	}
+
+/* check reason */
+
+	switch (pasynUser->reason)
+	{
+		case FINS_DM_WRITE_32:
+		{
+			type = "FINS_DM_WRITE_32";
+			break;
+		}
+
+		case FINS_DM_WRITE_32_NOREAD:
+		{
+			type = "FINS_DM_WRITE_32_NOREAD";
+			break;
+		}
+		
+		case FINS_AR_WRITE_32:
+		{
+			type = "FINS_AR_WRITE_32";
+			break;
+		}
+		
+		case FINS_AR_WRITE_32_NOREAD:
+		{
+			type = "FINS_AR_WRITE_32_NOREAD";
+			break;
+		}
+
+		default:
+		{
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
+			return (asynError);
+		}
+	}
+
+	asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s: port %s, addr %d, %s\n", FUNCNAME, pdrvPvt->portName, addr, type);
+	
+	switch (pasynUser->reason)
+	{
+		case FINS_DM_WRITE_32:
+		case FINS_DM_WRITE_32_NOREAD:
+		case FINS_AR_WRITE_32:
+		case FINS_AR_WRITE_32_NOREAD:
+		{
+			volatile epicsFloat32 val = (epicsFloat32) value;
+			volatile epicsUInt32 * const v = (epicsUInt32 *) &val;
+
+			*v = WSWAP32(*v);
+			
+		/* form FINS message and send data */
+
+			if (finsHostlinkwrite(pdrvPvt, pasynUser, (void *) &val, sizeof(epicsInt32) / sizeof(epicsInt16), addr, sizeof(epicsUInt32)) < 0)
+			{
+				return (asynError);
+			}
+			
+			break;
+		}
+		
+		default:
+		{
+			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", FUNCNAME, pdrvPvt->portName, pasynUser->reason);
+			return (asynError);
+		}
+	}
+
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote 1 word.\n", FUNCNAME, pdrvPvt->portName, addr);
+
+	return (asynSuccess);
+}
+
 /*** asynInt16Array *******************************************************************************/
 
 static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *value, size_t nelements, size_t *nIn)
@@ -2413,6 +2665,17 @@ static asynStatus WriteFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32
 }
 
 /*** asynDrvUser **********************************************************************************/
+
+static asynStatus drvUserDestroy(void *drvPvt,asynUser *pasynUser)
+{
+	return asynSuccess;
+}
+
+static asynStatus drvUserGetType(void *drvPvt, asynUser *pasynUser, const char **pptypeName, size_t *psize)
+{
+	*psize = 0;
+	return (asynSuccess);
+}
 
 static asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, const char **pptypeName, size_t *psize)
 {
