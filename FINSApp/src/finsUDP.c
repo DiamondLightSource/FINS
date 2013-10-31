@@ -264,11 +264,11 @@ static asynFloat32Array ifaceFloat32Array = { WriteFloat32Array, ReadFloat32Arra
 
 /*** asynDrvUser **********************************************************************************/
 
-asynStatus drvUserCreate (void *drvPvt, asynUser *pasynUser, const char *drvInfo, const char **pptypeName, size_t *psize);
-asynStatus drvUserGetType(void *drvPvt, asynUser *pasynUser, const char **pptypeName, size_t *psize);
-asynStatus drvUserDestroy(void *drvPvt, asynUser *pasynUser);
+static asynStatus drvUserCreate (void *drvPvt, asynUser *pasynUser, const char *drvInfo, const char **pptypeName, size_t *psize);
+static asynStatus drvUserGetType(void *drvPvt, asynUser *pasynUser, const char **pptypeName, size_t *psize);
+static asynStatus drvUserDestroy(void *drvPvt, asynUser *pasynUser);
 
-static asynDrvUser ifaceDrvUser = { drvUserCreate, NULL, NULL };
+static asynDrvUser ifaceDrvUser = { drvUserCreate, drvUserGetType, drvUserDestroy};
 
 /**************************************************************************************************/
 
@@ -314,12 +314,6 @@ int finsUDPInit(const char *portName, const char *address)
 	pdrvPvt->portName = epicsStrDup(portName);
 	
 	pasynOctet = callocMustSucceed(1, sizeof(asynOctet), FUNCNAME);
-	
-/* asynCommon */
-
-	pdrvPvt->common.interfaceType = asynCommonType;
-	pdrvPvt->common.pinterface = (void *) &asyn;
-	pdrvPvt->common.drvPvt = pdrvPvt;
 
 	status = pasynManager->registerPort(portName, ASYN_MULTIDEVICE | ASYN_CANBLOCK, 1, 0, 0);
 
@@ -329,7 +323,11 @@ int finsUDPInit(const char *portName, const char *address)
 		return (-1);
 	}
 	
-/* common */
+/* asynCommon */
+
+	pdrvPvt->common.interfaceType = asynCommonType;
+	pdrvPvt->common.pinterface = (void *) &asyn;
+	pdrvPvt->common.drvPvt = pdrvPvt;
 
 	status = pasynManager->registerInterface(portName, &pdrvPvt->common);
 	
@@ -365,11 +363,6 @@ int finsUDPInit(const char *portName, const char *address)
 
 	status = pasynOctetBase->initialize(portName, &pdrvPvt->octet, 0, 0, 0);
 	
-	if (status == asynSuccess)
-	{
-		status = pasynManager->registerInterruptSource(portName, &pdrvPvt->octet, &pdrvPvt->pasynPvt);
-	}
-		
 	if (status != asynSuccess)
 	{
 		printf("%s: registerInterface asynOctet failed\n", FUNCNAME);
@@ -384,11 +377,6 @@ int finsUDPInit(const char *portName, const char *address)
 	
 	status = pasynInt32Base->initialize(portName, &pdrvPvt->int32);
 	
-	if (status == asynSuccess)
-	{
-		status = pasynManager->registerInterruptSource(portName, &pdrvPvt->int32, &pdrvPvt->pasynPvt);
-	}
-		
 	if (status != asynSuccess)
 	{
 		printf("%s: registerInterface asynInt32 failed\n", FUNCNAME);
@@ -403,11 +391,6 @@ int finsUDPInit(const char *portName, const char *address)
 	
 	status = pasynInt16ArrayBase->initialize(portName, &pdrvPvt->int16Array);
 	
-	if (status == asynSuccess)
-	{
-		status = pasynManager->registerInterruptSource(portName, &pdrvPvt->int16Array, &pdrvPvt->pasynPvt);
-	}
-		
 	if (status != asynSuccess)
 	{
 		printf("%s: registerInterface asynInt16Array failed\n", FUNCNAME);
@@ -422,11 +405,6 @@ int finsUDPInit(const char *portName, const char *address)
 	
 	status = pasynInt32ArrayBase->initialize(portName, &pdrvPvt->int32Array);
 	
-	if (status == asynSuccess)
-	{
-		status = pasynManager->registerInterruptSource(portName, &pdrvPvt->int32Array, &pdrvPvt->pasynPvt);
-	}
-		
 	if (status != asynSuccess)
 	{
 		printf("%s: registerInterface asynInt32Array failed\n", FUNCNAME);
@@ -441,11 +419,6 @@ int finsUDPInit(const char *portName, const char *address)
 	
 	status = pasynFloat32ArrayBase->initialize(portName, &pdrvPvt->float32Array);
 	
-	if (status == asynSuccess)
-	{
-		status = pasynManager->registerInterruptSource(portName, &pdrvPvt->float32Array, &pdrvPvt->pasynPvt);
-	}
-		
 	if (status != asynSuccess)
 	{
 		printf("%s: registerInterface asynFloat32Array failed\n", FUNCNAME);
@@ -2555,6 +2528,17 @@ static asynStatus WriteFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32
 }
 
 /*** asynDrvUser **********************************************************************************/
+
+static asynStatus drvUserDestroy(void *drvPvt,asynUser *pasynUser)
+{
+	return (asynSuccess);
+}
+
+static asynStatus drvUserGetType(void *drvPvt, asynUser *pasynUser, const char **pptypeName, size_t *psize)
+{
+	*psize = 0;
+	return (asynSuccess);
+}
 
 asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, const char **pptypeName, size_t *psize)
 {
