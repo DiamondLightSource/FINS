@@ -217,7 +217,7 @@ static asynStatus interposeRead(void *ppvt, asynUser *pasynUser, char *data, siz
 	size_t bytesTransfered;
 	int i;
 	
-	asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: requesting %d bytes\n", __func__, maxchars);
+	asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: requesting %zd bytes\n", __func__, maxchars);
 
 /* Read the response into pPvt->buffer. We'll received all available characters up to the terminator we specified */
 
@@ -261,7 +261,7 @@ static asynStatus interposeRead(void *ppvt, asynUser *pasynUser, char *data, siz
 		data[FINS_HEADER_LEN + i] = aa;
 	}
 
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pPvt->buffer, *nbytesTransfered, "%s: received %d bytes of %d.\n", __func__, bytesTransfered, maxchars);
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, pPvt->buffer, *nbytesTransfered, "%s: received %zd bytes of %zd.\n", __func__, bytesTransfered, maxchars);
 
 	*nbytesTransfered	= maxchars;
 	
