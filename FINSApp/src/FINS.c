@@ -1163,7 +1163,7 @@ static int BuildWriteMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const 
 			if (asynSize == sizeof(epicsUInt16))
 			{
 				int i;
-				epicsUInt16 *ptrd = (epicsUInt16 *) &pdrvPvt->message[COM + 6];
+				epicsUInt16 *ptrd = (epicsUInt16 *) &pdrvPvt->message[COM + COMMAND_DATA_OFFSET];
 				epicsUInt16 *ptrs = (epicsUInt16 *) data;
 
 				for (i = 0; i < nelements; i++)
@@ -1179,7 +1179,7 @@ static int BuildWriteMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const 
 		
 			{
 				int i;
-				epicsUInt16 *ptrd = (epicsUInt16 *) &pdrvPvt->message[COM + 6];
+				epicsUInt16 *ptrd = (epicsUInt16 *) &pdrvPvt->message[COM + COMMAND_DATA_OFFSET];
 				epicsUInt32 *ptrs = (epicsUInt32 *) data;
 
 				for (i = 0; i < nelements; i++)
@@ -1243,7 +1243,7 @@ static int BuildWriteMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const 
 
 			{
 				int i;
-				epicsUInt32 *ptrd = (epicsUInt32 *) &pdrvPvt->message[COM + 6];
+				epicsUInt32 *ptrd = (epicsUInt32 *) &pdrvPvt->message[COM + COMMAND_DATA_OFFSET];
 				epicsUInt32 *ptrs = (epicsUInt32 *) data;
 				
 				for (i = 0; i < nelements; i++)
@@ -1254,7 +1254,7 @@ static int BuildWriteMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const 
 				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, swapping %zd 32-bit word(s).\n", __func__, pdrvPvt->portName, nelements);
 			}
 
-			*sendlen = COM + COMMAND_DATA_OFFSET + nelements * sizeof(uint32_t);
+			*sendlen = COM + COMMAND_DATA_OFFSET + nelements * sizeof(epicsUInt32);
 			*recvlen = RESP + 0;
 			
 			break;
