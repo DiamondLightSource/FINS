@@ -1,0 +1,4 @@
+registrar("finsNETRegister")
+registrar("finsDEVRegister")
+registrar("finsTestRegister")
+registrar("HostlinkInterposeRegister")

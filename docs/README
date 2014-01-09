@@ -55,45 +55,75 @@ w	FINS_IO_WRITE_32	32 bit array I/O Area write
 Float32Array
 r	FINS_DM_READ_32		32 bit float Data Memory read
 r	FINS_AR_READ_32		32 bit float Auxillary Memory read
-r	FINS_IO_READ_32		32 bit float I/O Area read
 w	FINS_DM_WRITE_32	32 bit float Data Memory write
 w	FINS_AR_WRITE_32	32 bit float Auxillary Memory write
-w	FINS_IO_WRITE_32	32 bit float I/O Area write
+
+Float64
+r	FINS_DM_READ_32		64 bit float Data Memory read
+r	FINS_AR_READ_32		64 bit float Auxillary Memory read
+w	FINS_DM_WRITE_32	64 bit float Data Memory write
+w	FINS_AR_WRITE_32	64 bit float Auxillary Memory write
 
 The _NOREAD versions of the WRITE functions do not perform an initial read from the device
 during record initialisation. Performing the inital read is asyn's method of bumpless restarts.
 
-Initialisation
---------------
+FINS via UDP or TCP
+-------------------
 
-To send FINS commands using UDP over Ethernet:
+To send FINS commands over Ethernet:
 
-    finsUDPInit(portName, <PLC's IP address>)
+    finsNETInit(<port name>, <asyn port name>, <node number>)
 
-To send FINS commands using Hostlink to a serial device:
+where
 
-    finsHostlinkInit(portName, <serial device>)
+* port name - The name of the asyn port to create.
 
-finsUDP
--------
+* asyn port name - The name of the asyn port created in drvAsynIPPortConfigure()
 
-* The EPICS IOC's node address is set to 254.
+* node number - Only required for UDP connections. Don't specify or set to zero for TCP.
+		The node number of the IOC, which should be between 1 and 254.
+                Zero will select the default value of 254.
+		The node number must not be the same as the PLC's node number (the last byte of its IP address).
+		Each IOC communicating with the same PLC must have a unique node number.
+
+* Create an asyn port for the connection: drvAsynIPPortConfigure("<asyn port name>", "xxx.xxx.xxx.xxx:9600 udp", 0, 0, 0)
+* Create an asyn port for the connection: drvAsynIPPortConfigure("<asyn port name>", "xxx.xxx.xxx.xxx:9600 tcp", 0, 0, 0)
 
 * Transfers are limited to 500 16-bit words (1000 bytes) maximum.
 
-* PLC's FINS UDP port must be 9600.
+* The PLC's default FINS UDP/TCP port is 9600.
 
-* The default timeout, the third parameter of the @asyn() command, is currently one second.
+* The default timeout, the third parameter of the @asyn() command, is one second.
 
 * A funtion finsTest("<ip address>") sends a FINS data memory read request for two words from
   address 100 to the specified IP address.
 
+* Up to 16 simultaneous TCP connections to the PLC are supported.
+
+
 finsHostlink
 ------------
 
-* The serial device must be a vxWorks device, e.g. /ty/40/5
+To send FINS commands in a HOSTLINK wrapper to a local serial device:
+
+    HostlinkInterposeInit(<asyn port name>)
+    finsDEVInit(<port name>, <asyn port name>)
+    
+To send FINS commands in a HOSTLINK wrapper to a terminal server:
+
+    HostlinkInterposeInit(<asyn port name>)
+    finsNETInit(<port name>, <asyn port name>, <node number>)
+
+
+where
+
+* port name - The name of the asyn port to create.
+
+* asyn port name - The name of the asyn port created in drvAsynSerialPortConfigure().
 
 * Transfers are limited to 268 16-bit words maximum.
+
+* The function HostlinkInterposeInit adds an asyn interpose layer to convert the binary FINS data into ASCII HostLink data.
 
 
 FINS.template illustrates how to configure records.
