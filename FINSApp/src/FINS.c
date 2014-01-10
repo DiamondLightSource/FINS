@@ -864,7 +864,9 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 		return (-1);
 	}
 
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, (char *) pdrvPvt->message, sendlen, "%s: port %s, sending %zd bytes, expecting %zd bytes.\n", __func__, pdrvPvt->portName, sendlen, recvlen);
+/* using %lu and casting to unsigned long instead of using %zu because of our old PPC/vxWorks gcc compiler */
+
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, (char *) pdrvPvt->message, sendlen, "%s: port %s, sending %lu bytes, expecting %lu bytes.\n", __func__, pdrvPvt->portName, (unsigned long) sendlen, (unsigned long) recvlen);
 	
 	if (pasynUser->timeout <= 0.0)
 	{
@@ -901,11 +903,11 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 		}
 	}
 
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, (char *) pdrvPvt->message, recdlen, "%s: port %s, received %zd bytes.\n", __func__, pdrvPvt->portName, recdlen);
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, (char *) pdrvPvt->message, recdlen, "%s: port %s, received %lu bytes.\n", __func__, pdrvPvt->portName, (unsigned long) recdlen);
 
 	if (sentlen != sendlen)
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, writeRead() write failed. %zd != %zd\n", __func__, pdrvPvt->portName, sentlen, sendlen);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, writeRead() write failed. %lu != %lu\n", __func__, pdrvPvt->portName, (unsigned long) sentlen, (unsigned long) sendlen);
 		return (-1);
 	}
 	
@@ -975,7 +977,7 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 				}
 			}
 
-			asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, %s %zd 16-bit word(s).\n", __func__, pdrvPvt->portName, SWAPT, nelements);
+			asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, %s %lu 16-bit word(s).\n", __func__, pdrvPvt->portName, SWAPT, (unsigned long) nelements);
 			
 			break;
 		}
@@ -996,7 +998,7 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 				ptrd[i] = WSWAP32(ptrs[i]);
 			}
 				
-			asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, swapping %zd 32-bit word(s).\n", __func__, pdrvPvt->portName, nelements);
+			asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, swapping %lu 32-bit word(s).\n", __func__, pdrvPvt->portName, (unsigned long) nelements);
 			
 			break;
 		}
@@ -1171,7 +1173,7 @@ static int BuildWriteMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const 
 					ptrd[i] = BSWAP16(ptrs[i]);
 				}
 
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, %s %zd 16-bit word(s).\n", __func__, pdrvPvt->portName, SWAPT, nelements);
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, %s %lu 16-bit word(s).\n", __func__, pdrvPvt->portName, SWAPT, (unsigned long) nelements);
 			}
 			else
 			
@@ -1187,7 +1189,7 @@ static int BuildWriteMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const 
 					ptrd[i] = BSWAP16((epicsUInt16) ptrs[i]);
 				}
 
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, %s %zd 16-bit word(s).\n", __func__, pdrvPvt->portName, SWAPT, nelements);				
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, %s %lu 16-bit word(s).\n", __func__, pdrvPvt->portName, SWAPT, (unsigned long) nelements);
 			}
 			
 			*sendlen = COM + COMMAND_DATA_OFFSET + nelements * sizeof(epicsUInt16);
@@ -1251,7 +1253,7 @@ static int BuildWriteMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const 
 					ptrd[i] = WSWAP32(ptrs[i]);
 				}
 				
-				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, swapping %zd 32-bit word(s).\n", __func__, pdrvPvt->portName, nelements);
+				asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: port %s, swapping %lu 32-bit word(s).\n", __func__, pdrvPvt->portName, (unsigned long) nelements);
 			}
 
 			*sendlen = COM + COMMAND_DATA_OFFSET + nelements * sizeof(epicsUInt32);
@@ -1326,7 +1328,7 @@ static int finsWrite(drvPvt * const pdrvPvt, asynUser *pasynUser, const void *da
 	
 	BuildWriteMessage(pdrvPvt, pasynUser, address, nelements, &sendlen, &recvlen, asynSize, data);
 	
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, (char *) pdrvPvt->message, sendlen, "%s: port %s, sending %zd bytes.\n", __func__, pdrvPvt->portName, sendlen);
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, (char *) pdrvPvt->message, sendlen, "%s: port %s, sending %lu bytes.\n", __func__, pdrvPvt->portName, (unsigned long) sendlen);
 	
 	epicsTimeGetCurrent(&ets);
 	
@@ -1365,11 +1367,11 @@ static int finsWrite(drvPvt * const pdrvPvt, asynUser *pasynUser, const void *da
 		}
 	}
 
-	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, (char *) pdrvPvt->message, recvlen, "%s: port %s, received %zd bytes.\n", __func__, pdrvPvt->portName, recvlen);
+	asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, (char *) pdrvPvt->message, recvlen, "%s: port %s, received %lu bytes.\n", __func__, pdrvPvt->portName, (unsigned long) recvlen);
 
 	if (sentlen != sendlen)
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, writeRead() write failed. %zd != %zd\n", __func__, pdrvPvt->portName, sentlen, sendlen);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, writeRead() write failed. %lu != %lu\n", __func__, pdrvPvt->portName, (unsigned long) sentlen, (unsigned long) sendlen);
 		return (-1);
 	}
 	
@@ -1456,7 +1458,7 @@ static asynStatus octetRead(void *pvt, asynUser *pasynUser, char *data, size_t m
 		*eomReason |= ASYN_EOM_END;
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %zd bytes.\n", __func__, pdrvPvt->portName, addr, *nbytesTransfered);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %lu bytes.\n", __func__, pdrvPvt->portName, addr, (unsigned long) *nbytesTransfered);
 
    	return (asynSuccess);
 }
@@ -1503,7 +1505,7 @@ static asynStatus octetWrite(void *pvt, asynUser *pasynUser, const char *data, s
 
 	*nbytesTransfered = numchars;
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %zd bytes.\n", __func__, pdrvPvt->portName, addr, numchars);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %lu bytes.\n", __func__, pdrvPvt->portName, addr, (unsigned long) numchars);
 
    	return (asynSuccess);
 }
@@ -1798,7 +1800,7 @@ static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *val
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %zd 16-bit word(s).\n", __func__, pdrvPvt->portName, addr, *nIn);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %lu 16-bit word(s).\n", __func__, pdrvPvt->portName, addr, (unsigned long) *nIn);
 
 	return (asynSuccess);
 }
@@ -1847,7 +1849,7 @@ static asynStatus WriteInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *va
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %zd 16-bit word(s).\n", __func__, pdrvPvt->portName, addr, nelements);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %lu 16-bit word(s).\n", __func__, pdrvPvt->portName, addr, (unsigned long) nelements);
 
 	return (asynSuccess);
 }
@@ -1908,7 +1910,7 @@ static asynStatus ReadInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *val
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %zd 32-bit word(s).\n", __func__, pdrvPvt->portName, addr, *nIn);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %lu 32-bit word(s).\n", __func__, pdrvPvt->portName, addr, (unsigned long) *nIn);
 	
 	return (asynSuccess);
 }
@@ -1955,7 +1957,7 @@ static asynStatus WriteInt32Array(void *pvt, asynUser *pasynUser, epicsInt32 *va
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %zd 32-bit word(s).\n", __func__, pdrvPvt->portName, addr, nelements);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %lu 32-bit word(s).\n", __func__, pdrvPvt->portName, addr, (unsigned long) nelements);
 
 	return (asynSuccess);
 }
@@ -2008,7 +2010,7 @@ static asynStatus ReadFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32 
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %zd float(s).\n", __func__, pdrvPvt->portName, addr, *nIn);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %lu float(s).\n", __func__, pdrvPvt->portName, addr, (unsigned long) *nIn);
 	
 	return (asynSuccess);
 }
@@ -2054,7 +2056,7 @@ static asynStatus WriteFloat32Array(void *pvt, asynUser *pasynUser, epicsFloat32
 		return (asynError);
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %zd float(s).\n", __func__, pdrvPvt->portName, addr, nelements);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %lu float(s).\n", __func__, pdrvPvt->portName, addr, (unsigned long) nelements);
 
 	return (asynSuccess);
 }
