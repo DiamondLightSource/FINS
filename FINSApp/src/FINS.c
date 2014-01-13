@@ -99,6 +99,8 @@
 #include <asynCommonSyncIO.h>
 #include <asynStandardInterfaces.h>
 
+#include <drvAsynIPPort.h>
+
 #include <iocsh.h>
 #include <registryFunction.h>
 #include <osiUnistd.h>
@@ -183,6 +185,27 @@ int finsNETInit(const char *portName, const char *dev, const int snode)
 int finsDEVInit(const char *portName, const char *dev)
 {
 	return finsInit(portName, dev, -1);
+}
+
+/**************************************************************************************************/
+/*
+	A modified version of the old initialisation function which calls drvAsynIPPortConfigure
+	to seet up the UDP connection.
+*/
+
+int finsUDPInit(const char *portName, const char *address)
+{
+	char *adds;
+	
+	adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
+	epicsSnprintf(adds, strlen(address) + 10, "%s:9600 udp", address);
+	
+	if (drvAsynIPPortConfigure(address, adds, 0, 0, 0) == 0)
+	{
+		return finsInit(portName, address, FINS_SOURCE_ADDR);
+	}
+
+	return (-1);
 }
 
 /**************************************************************************************************/
@@ -2431,6 +2454,32 @@ static void finsDEVRegister(void)
 }
 
 epicsExportRegistrar(finsDEVRegister);
+
+/*------------------------------------------------------------------------------------------------*/
+
+static const iocshArg finsUDPInitArg0 = { "port name", iocshArgString };
+static const iocshArg finsUDPInitArg1 = { "IP address", iocshArgString };
+
+static const iocshArg *finsUDPInitArgs[] = { &finsUDPInitArg0, &finsUDPInitArg1};
+static const iocshFuncDef finsUDPInitFuncDef = { "finsUDPInit", 2, finsUDPInitArgs};
+
+static void finsUDPInitCallFunc(const iocshArgBuf *args)
+{
+	finsUDPInit(args[0].sval, args[1].sval);
+}
+
+static void finsUDPRegister(void)
+{
+	static int firstTime = 1;
+	
+	if (firstTime)
+	{
+		firstTime = 0;
+		iocshRegister(&finsUDPInitFuncDef, finsUDPInitCallFunc);
+	}
+}
+
+epicsExportRegistrar(finsUDPRegister);
 
 /**************************************************************************************************/
 
