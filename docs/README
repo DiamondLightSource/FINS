@@ -100,9 +100,10 @@ where
 
 * Up to 16 simultaneous TCP connections to the PLC are supported.
 
-* The old finsUDPInit function still exists.
+* The old finsUDPInit function still exists and there's a new finsTCPInit function:
 
 	finsUDPInit(<port name>, <IP address>)
+	finsTCPInit(<port name>, <IP address>)
 
 finsHostlink
 ------------
