@@ -208,6 +208,21 @@ int finsUDPInit(const char *portName, const char *address)
 	return (-1);
 }
 
+int finsTCPInit(const char *portName, const char *address)
+{
+	char *adds;
+	
+	adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
+	epicsSnprintf(adds, strlen(address) + 10, "%s:9600 tcp", address);
+	
+	if (drvAsynIPPortConfigure(address, adds, 0, 0, 0) == 0)
+	{
+		return finsInit(portName, address, 0);
+	}
+
+	return (-1);
+}
+
 /**************************************************************************************************/
 /*
 	For TCP connections we need this extra FINS Frame data for requesting a node number and
@@ -2480,6 +2495,32 @@ static void finsUDPRegister(void)
 }
 
 epicsExportRegistrar(finsUDPRegister);
+
+/*------------------------------------------------------------------------------------------------*/
+
+static const iocshArg finsTCPInitArg0 = { "port name", iocshArgString };
+static const iocshArg finsTCPInitArg1 = { "IP address", iocshArgString };
+
+static const iocshArg *finsTCPInitArgs[] = { &finsTCPInitArg0, &finsTCPInitArg1};
+static const iocshFuncDef finsTCPInitFuncDef = { "finsTCPInit", 2, finsTCPInitArgs};
+
+static void finsTCPInitCallFunc(const iocshArgBuf *args)
+{
+	finsTCPInit(args[0].sval, args[1].sval);
+}
+
+static void finsTCPRegister(void)
+{
+	static int firstTime = 1;
+	
+	if (firstTime)
+	{
+		firstTime = 0;
+		iocshRegister(&finsTCPInitFuncDef, finsTCPInitCallFunc);
+	}
+}
+
+epicsExportRegistrar(finsTCPRegister);
 
 /**************************************************************************************************/
 
