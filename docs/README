@@ -15,6 +15,7 @@ r	FINS_IO_READ		16 bit I/O Area read
 r	FINS_DM_READ_32		32 bit Data Memory read
 r	FINS_AR_READ_32		32 bit Auxillary Memory read
 r	FINS_IO_READ_32		32 bit I/O Area read
+r	FINS_WR_READ		16 bit Work Area read
 r	FINS_CYCLE_TIME_MEAN	PLC mean cycle time (ms)
 r	FINS_CYCLE_TIME_MAX	PLC max cycle time (ms)
 r	FINS_CYCLE_TIME_MIN	PLC min cycle time (ms)
