@@ -17,6 +17,7 @@
 		r	FINS_AR_READ_32
 		r	FINS_IO_READ_32
 		r	FINS_WR_READ
+		r	FINS_HR_READ
 		r	FINS_CYCLE_TIME_MEAN
 		r	FINS_CYCLE_TIME_MAX
 		r	FINS_CYCLE_TIME_MIN
@@ -610,6 +611,7 @@ static int BuildReadMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const s
 		case FINS_AR_READ:
 		case FINS_IO_READ:
 		case FINS_WR_READ:
+		case FINS_HR_READ:
 		case FINS_DM_WRITE:
 		case FINS_AR_WRITE:
 		case FINS_IO_WRITE:
@@ -645,6 +647,12 @@ static int BuildReadMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const s
 				case FINS_WR_READ:
 				{
 					pdrvPvt->message[COM] = WR;
+					break;
+				}
+				
+				case FINS_HR_READ:
+				{
+					pdrvPvt->message[COM] = HR;
 					break;
 				}
 				
@@ -993,6 +1001,7 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 		case FINS_AR_READ:
 		case FINS_IO_READ:
 		case FINS_WR_READ:
+		case FINS_HR_READ:
 		case FINS_DM_WRITE:
 		case FINS_AR_WRITE:
 		case FINS_IO_WRITE:
@@ -1576,6 +1585,7 @@ static asynStatus ReadInt32(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 		case FINS_AR_READ:
 		case FINS_IO_READ:
 		case FINS_WR_READ:
+		case FINS_HR_READ:
 		case FINS_DM_READ_32:
 		case FINS_AR_READ_32:
 		case FINS_IO_READ_32:
@@ -1810,6 +1820,8 @@ static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *val
 		case FINS_DM_READ:
 		case FINS_AR_READ:
 		case FINS_IO_READ:
+		case FINS_WR_READ:
+		case FINS_HR_READ:
 		{
 			if (((pdrvPvt->type == FINS_UDP_type) && (nelements > FINS_MAX_UDP_WORDS)) || ((pdrvPvt->type == FINS_TCP_type) && (nelements > FINS_MAX_TCP_WORDS)) || ((pdrvPvt->type == HOSTLINK_type) && (nelements > FINS_MAX_HOST_WORDS)))
 			{
@@ -2221,6 +2233,11 @@ asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, co
 		if (strcmp("FINS_WR_READ", drvInfo) == 0)
 		{
 			pasynUser->reason = FINS_WR_READ;
+		}
+		else
+		if (strcmp("FINS_HR_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_HR_READ;
 		}
 		else
 		if (strcmp("FINS_CT_READ", drvInfo) == 0)
