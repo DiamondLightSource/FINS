@@ -192,7 +192,7 @@ int finsDEVInit(const char *portName, const char *dev)
 /**************************************************************************************************/
 /*
 	A modified version of the old initialisation function which calls drvAsynIPPortConfigure
-	to seet up the UDP connection.
+	to set up the UDP connection.
 */
 
 int finsUDPInit(const char *portName, const char *address)
@@ -287,7 +287,7 @@ static int FINSnodeRequest(drvPvt * const pdrvPvt)
 
 /**************************************************************************************************/
 /*
-	Connection managment for the TCP asyn port
+	Connection management for the TCP asyn port
 	
 	If we lose the link we have to resend the FINS Node Address Send command to obtain a new node address
 */
@@ -571,7 +571,7 @@ static void InitHeader(drvPvt * const pdrvPvt)
 	We only support word addresses, no bit addressing so COM+3 is zero
 	
 	address:	16-bit address
-	nelements:	number of 16-bit wirds to transfer
+	nelements:	number of 16-bit words to transfer
 */
 /**************************************************************************************************/
 
@@ -593,7 +593,7 @@ static void InitAddrSize(drvPvt * const pdrvPvt, const epicsUInt16 address, cons
 
 	address	PLC source/destination address for memory/counter/timer commands
 	nelements	number of 16/32 words to read for memory/counter/timer commands
-	sendlen	caluculated size of message
+	sendlen	calculated size of message
 	recvlen	expected size of reply
 */
 /**************************************************************************************************/
@@ -885,13 +885,13 @@ static void UpdateTimes(drvPvt * const pdrvPvt, epicsTimeStamp *ets, epicsTimeSt
 	data		epicsInt16, epicsInt32 or epicsFloat32
 	nelements	number of items to read
 	address	PLC memory address
-	transfered	normally the same as nelements
+	transferred	normally the same as nelements
 	asynSize	sizeof(epicsInt16) for asynInt16Array or sizeof(epicsInt32) for asynInt32, asynInt32Array, asynFloat32Array, asynFloat64
 			defines the type of data to be returned to asyn
 */
 /**************************************************************************************************/
 
-static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, const size_t nelements, const epicsUInt16 address, size_t *transfered, size_t asynSize)
+static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, const size_t nelements, const epicsUInt16 address, size_t *transferred, size_t asynSize)
 {
 	size_t sendlen = 0, sentlen = 0, recvlen = 0, recdlen = 0;
 	int eomReason = 0;
@@ -1158,7 +1158,7 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 		}
 	}
 	
-	if (transfered) *transfered = nelements;
+	if (transferred) *transferred = nelements;
 
 	return (0);	
 }
@@ -1388,7 +1388,7 @@ static int finsWrite(drvPvt * const pdrvPvt, asynUser *pasynUser, const void *da
 	
 	epicsTimeGetCurrent(&ets);
 	
-/* set the timeout of writes to the asynOctect port to be the timeout specified in the record */
+/* set the time out of writes to the asynOctect port to be the time out specified in the record */
 
 	if (pasynUser->timeout <= 0.0)
 	{
@@ -1464,14 +1464,14 @@ static int finsWrite(drvPvt * const pdrvPvt, asynUser *pasynUser, const void *da
 
 /*** asynOctet ************************************************************************************/
 
-static asynStatus octetRead(void *pvt, asynUser *pasynUser, char *data, size_t maxchars, size_t *nbytesTransfered, int *eomReason)
+static asynStatus octetRead(void *pvt, asynUser *pasynUser, char *data, size_t maxchars, size_t *nbytesTransferred, int *eomReason)
 {
 	drvPvt * const pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
 	
 	*eomReason = 0;
-	*nbytesTransfered = 0;
+	*nbytesTransferred = 0;
 	
 	if ((status = pasynManager->getAddr(pasynUser, &addr)) != asynSuccess)
 	{
@@ -1504,7 +1504,7 @@ static asynStatus octetRead(void *pvt, asynUser *pasynUser, char *data, size_t m
 
 /* send FINS request */
 
-	if (finsRead(pdrvPvt, pasynUser, (void *) data, maxchars, addr, nbytesTransfered, 0) < 0)
+	if (finsRead(pdrvPvt, pasynUser, (void *) data, maxchars, addr, nbytesTransferred, 0) < 0)
 	{
 		return (asynError);
 	}
@@ -1514,20 +1514,20 @@ static asynStatus octetRead(void *pvt, asynUser *pasynUser, char *data, size_t m
 		*eomReason |= ASYN_EOM_END;
 	}
 
-	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %lu bytes.\n", __func__, pdrvPvt->portName, addr, (unsigned long) *nbytesTransfered);
+	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, read %lu bytes.\n", __func__, pdrvPvt->portName, addr, (unsigned long) *nbytesTransferred);
 
    	return (asynSuccess);
 }
 
 /* Form a FINS write message, send request, wait for the reply and check for errors */
 
-static asynStatus octetWrite(void *pvt, asynUser *pasynUser, const char *data, size_t numchars, size_t *nbytesTransfered)
+static asynStatus octetWrite(void *pvt, asynUser *pasynUser, const char *data, size_t numchars, size_t *nbytesTransferred)
 {
 	drvPvt * const pdrvPvt = (drvPvt *) pvt;
 	int addr;
 	asynStatus status;
 	
-	*nbytesTransfered = 0;
+	*nbytesTransferred = 0;
 
 	if ((status = pasynManager->getAddr(pasynUser, &addr)) != asynSuccess)
 	{
@@ -1559,7 +1559,7 @@ static asynStatus octetWrite(void *pvt, asynUser *pasynUser, const char *data, s
 
 /* assume for now that we can always write the full request */
 
-	*nbytesTransfered = numchars;
+	*nbytesTransferred = numchars;
 
 	asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, "%s: port %s, addr %d, wrote %lu bytes.\n", __func__, pdrvPvt->portName, addr, (unsigned long) numchars);
 
@@ -2326,7 +2326,7 @@ static const char * const error10 = "Command format error";
 static const char * const error11 = "Parameter error";
 static const char * const error20 = "Read not possible";
 static const char * const error21 = "Write not possible";
-static const char * const error22 = "Not executable in curent mode";
+static const char * const error22 = "Not executable in current mode";
 static const char * const error23 = "No unit";
 static const char * const error24 = "Start/Stop not possible";
 static const char * const error25 = "Unit error";
@@ -2675,7 +2675,7 @@ int finsTest(char *address)
 		return (-1);
 	}
 
-/* receive reply with timeout */
+/* receive reply with time out */
 
 	{
 		fd_set rfds;
@@ -2684,7 +2684,7 @@ int finsTest(char *address)
 		FD_ZERO(&rfds);
 		FD_SET(fd, &rfds);
 		
-	/* timeout */
+	/* time out */
 
 		tv.tv_sec = FINS_TIMEOUT;
 		tv.tv_usec = 0;
