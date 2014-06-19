@@ -110,22 +110,16 @@ where
 finsHostlink
 ------------
 
-To send FINS commands in a HOSTLINK wrapper to a local serial device:
+To send FINS commands in a HOSTLINK wrapper to a local serial device or to a terminal server:
 
     HostlinkInterposeInit(<asyn port name>)
     finsDEVInit(<port name>, <asyn port name>)
-    
-To send FINS commands in a HOSTLINK wrapper to a terminal server:
-
-    HostlinkInterposeInit(<asyn port name>)
-    finsNETInit(<port name>, <asyn port name>, <node number>)
-
 
 where
 
 * port name - The name of the asyn port to create.
 
-* asyn port name - The name of the asyn port created in drvAsynSerialPortConfigure().
+* asyn port name - The name of the asyn port created in drvAsynSerialPortConfigure() or drvAsynIPPortConfigure().
 
 * Transfers are limited to 268 16-bit words maximum.
 

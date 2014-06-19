@@ -186,14 +186,14 @@ static asynStatus interposeWrite(void *ppvt, asynUser *pasynUser, const char *da
 	size_t bytesTransfered;
 	int i;
 	
-	memcpy(pPvt->fins_header, data, FINS_HEADER_LEN);	/* save the fins heaader */
+	memcpy(pPvt->fins_header, data, FINS_HEADER_LEN);	/* save the fins header */
 	
 	memset(pPvt->buffer, 0, sizeof(pPvt->buffer));		/* clear buffer */
 	strcpy(pPvt->buffer, "@00FA000000000");			/* short hostlink/fins header */
 	
 	for (i = 0; i < numchars - FINS_HEADER_LEN; i++)
 	{
-		sprintf(pPvt->buffer + HOST_HEADER_LEN + 2 * i, "%02X", data[FINS_HEADER_LEN + i]);
+		sprintf(pPvt->buffer + HOST_HEADER_LEN + 2 * i, "%02X", (unsigned char) data[FINS_HEADER_LEN + i]);
 	}
 	
 /* calculate and add checksum */
@@ -218,7 +218,6 @@ static asynStatus interposeRead(void *ppvt, asynUser *pasynUser, char *data, siz
 	int i;
 	
 	asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s: requesting %lu bytes\n", __func__, (unsigned long) maxchars);
-
 
 /* Read the response into pPvt->buffer. We'll received all available characters up to the terminator we specified */
 
