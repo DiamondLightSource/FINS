@@ -5,7 +5,7 @@ from iocbuilder.modules.asyn import Asyn, AsynPort
 class FINS(Device):
     Dependencies = (Asyn,)
     LibFileList = ['FINS']
-    DbdFileList = ['finsUDP']
+    DbdFileList = ['FINS']
     AutoInstantiate = True
 
 class FINSPort(AsynPort):
