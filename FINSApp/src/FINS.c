@@ -200,8 +200,17 @@ int finsUDPInit(const char *portName, const char *address)
 	char *adds;
 	
 	adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
-	epicsSnprintf(adds, strlen(address) + 10, "%s:9600 udp", address);
-	
+
+	if(strchr(address, ':') == NULL)
+    {
+        // no port provided - default to 9600
+        epicsSnprintf(adds, strlen(address) + 10, "%s:9600 udp", address);
+    }
+    else
+    {
+        epicsSnprintf(adds, strlen(address) + 10, "%s udp", address);
+    }
+
 	if (drvAsynIPPortConfigure(address, adds, 0, 0, 0) == 0)
 	{
 		return finsInit(portName, address, FINS_SOURCE_ADDR);
@@ -213,9 +222,18 @@ int finsUDPInit(const char *portName, const char *address)
 int finsTCPInit(const char *portName, const char *address)
 {
 	char *adds;
-	
-	adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
-	epicsSnprintf(adds, strlen(address) + 10, "%s:9600 tcp", address);
+
+    adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
+
+	if(strchr(address, ':') == NULL)
+	{
+	    // no port provided - default to 9600
+	    epicsSnprintf(adds, strlen(address) + 10, "%s:9600 tcp", address);
+	}
+	else
+	{
+	    epicsSnprintf(adds, strlen(address) + 10, "%s tcp", address);
+	}
 	
 	if (drvAsynIPPortConfigure(address, adds, 0, 0, 0) == 0)
 	{

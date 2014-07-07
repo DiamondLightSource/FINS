@@ -208,6 +208,10 @@ record(ai, "$(device):AR336")
 	field(PINI, "YES")
 }
 
+# A510 & 511 start up
+# A512 & 513 power interruption time 
+# W339 section 9-16
+
 record(ai, "$(device):AR514")
 {
 	field(DTYP, "asynInt32")
