@@ -35,3 +35,23 @@ def FINSUDPInitSim(ip, name, simulation=None, FINSUDPInit=FINSUDPInit, **kwargs)
         return FINSUDPInit(simulation, name, **kwargs)
 
 SetSimulation(FINSUDPInit, FINSUDPInitSim)
+
+class FINSHostlink(FINSPort):
+    """This creates a port that will send FINS command in a Hostlink wrapper
+    to a PLC over a serial port."""
+    Dependencies = (FINS,)
+    
+    def __init__(self, asyn_port, name, **args):
+        self.__super.__init__(name)
+        self.asyn_port = asyn_port
+
+    def Initialise(self):
+        print '# HostlinkInterposeInit(asyn_port)'    
+        print 'HostlinkInterposeInit("%(asyn_port)s")' % self.__dict__    
+        print '# finsDEVInit(FINS_port_name, asyn_port)'    
+        print 'finsDEVInit("%(asyn_name)s", "%(asyn_port)s")' % self.__dict__
+        
+    ArgInfo = makeArgInfo(__init__,    
+        asyn_port = Ident("Asyn port for serial comms (possibly over terminal server)", AsynPort),
+        name = Simple("Asyn port name created by FINS driver"))     
+    
