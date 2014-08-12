@@ -418,3 +418,12 @@ record(mbbi, "$(device):PLCTYPE")
 }
 
 #---------------------------------------------------------------------------------------------------
+
+record(waveform, "$(device):FORCE:RESET")
+{
+	field(DESC, "Clear all forced bits")
+	field(DTYP, "asynOctetWrite")
+	field(INP,  "@asyn($(port), 0, 0) FINS_SET_RESET_CANCEL")
+	field(NELM, "0")
+	field(FTVL, "UCHAR")
+}

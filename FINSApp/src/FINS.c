@@ -8,6 +8,7 @@
 		asynOctet
 		r	FINS_MODEL
 		w	FINS_CYCLE_TIME_RESET
+		w	FINS_SET_RESET_CANCEL
 		
 		Int32
 		r	FINS_DM_READ
@@ -1349,6 +1350,19 @@ static int BuildWriteMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const 
 			
 			break;
 		}
+	
+	/* clear all bits that have been forced on or off */
+	
+		case FINS_SET_RESET_CANCEL:
+		{
+			pdrvPvt->mrc = 0x23;
+			pdrvPvt->src = 0x02;
+			
+			*sendlen = COM + 0;
+			*recvlen = RESP + 0;
+			
+			break;
+		}
 		
 		default:
 		{
@@ -1555,10 +1569,11 @@ static asynStatus octetWrite(void *pvt, asynUser *pasynUser, const char *data, s
 	switch (pasynUser->reason)
 	{
 		case FINS_CYCLE_TIME_RESET:
+		case FINS_SET_RESET_CANCEL:
 		{
 			break;
 		}
-		
+
 		default:
 		{
 			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", __func__, pdrvPvt->portName, pasynUser->reason);
@@ -2316,6 +2331,11 @@ asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, co
 		if (strcmp("FINS_CLOCK_READ", drvInfo) == 0)
 		{
 			pasynUser->reason = FINS_CLOCK_READ;
+		}
+		else
+		if (strcmp("FINS_SET_RESET_CANCEL", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_SET_RESET_CANCEL;
 		}
 		else
 		if (strcmp("FINS_EXPLICIT", drvInfo) == 0)

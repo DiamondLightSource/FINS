@@ -7,7 +7,8 @@ Interfaces
 asynOctet
 r	FINS_MODEL		20 character string of module model number
 w	FINS_CYCLE_TIME_RESET	Reset PLC cycle time calculations
-		
+w	FINS_SET_RESET_CANCEL	Clear all bits that have been forced on or off
+
 Int32
 r	FINS_DM_READ		16 bit Data Memory read
 r	FINS_AR_READ		16 bit Auxiliary Memory read
