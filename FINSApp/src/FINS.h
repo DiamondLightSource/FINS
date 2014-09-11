@@ -54,6 +54,9 @@
 #define FINS_CLOCK_READ_LEN	7
 #define FINS_CPU_STATE_LEN	26
 
+#define FINS_MM_MAX_ADDRS	10
+#define FINS_MM_MAX_ENTRIES	10
+
 #define ONE_ELEMENT	(1)
 
 
@@ -121,6 +124,7 @@ enum FINS_COMMANDS
 	FINS_MONITOR,
 	FINS_CLOCK_READ,
 	FINS_SET_RESET_CANCEL,
+	FINS_MM_READ,
 	FINS_EXPLICIT
 };
 
@@ -152,6 +156,7 @@ static const char * const FINS_names[] = {
 	"FINS_MONITOR",
 	"FINS_CLOCK_READ",
 	"FINS_SET_RESET_CANCEL",
+	"FINS_MM_READ",
 	"FINS_EXPLICIT"
 };
 
@@ -174,6 +179,20 @@ typedef struct
 	asynInterface octet;
 	
 } ttyController_t;
+
+typedef struct MultiMemArea
+{
+	epicsUInt16 area[10];
+	epicsUInt16 address[10];
+	
+} MultiMemArea;
+
+typedef struct MultiMemAreaPair
+{
+	epicsUInt8 area;
+	epicsUInt16 address __attribute__ ((packed));
+	
+} MultiMemAreaPair;
 
 typedef struct drvPvt
 {

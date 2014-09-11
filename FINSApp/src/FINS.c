@@ -8,7 +8,6 @@
 		asynOctet
 		r	FINS_MODEL
 		w	FINS_CYCLE_TIME_RESET
-		w	FINS_SET_RESET_CANCEL
 		
 		Int32
 		r	FINS_DM_READ
@@ -37,12 +36,14 @@
 		w	FINS_AR_WRITE_32_NOREAD
 		w	FINS_IO_WRITE_32
 		w	FINS_IO_WRITE_32_NOREAD
+		w	FINS_SET_RESET_CANCEL
 		
 		Int16Array
 		r	FINS_DM_READ
 		r	FINS_AR_READ
 		r	FINS_IO_READ
 		r	FINS_CLOCK_READ
+		r	FINS_MM_READ
 		w	FINS_DM_WRITE
 		w	FINS_AR_WRITE
 		w	FINS_IO_WRITE
@@ -175,6 +176,8 @@ static asynDrvUser ifaceDrvUser = { drvUserCreate, drvUserGetType, drvUserDestro
 
 extern int errno;
 static int finsInit(const char *portName, const char *dev, const int snode);
+
+static MultiMemArea MM[10];
 
 /**************************************************************************************************/
 
@@ -796,7 +799,28 @@ static int BuildReadMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const s
 		
 			break;
 		}
+		
+		case FINS_MM_READ:
+		{
+			int i;
 			
+			pdrvPvt->mrc = 0x01;
+			pdrvPvt->src = 0x04;
+						
+			for (i = 0; (i < nelements) && (MM[address].area[i]); i++)
+			{
+				pdrvPvt->message[COM + 4 * i + 0] = MM[address].area[i];
+				pdrvPvt->message[COM + 4 * i + 1] = MM[address].address[i] >> 8;
+				pdrvPvt->message[COM + 4 * i + 2] = MM[address].address[i] & 0xff;
+				pdrvPvt->message[COM + 4 * i + 3] = 0x00;
+			}
+			
+			*sendlen = COM + 4 * i;
+			*recvlen = RESP + 3 * i;
+
+			break;
+		}
+		
 		default:
 		{
 			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, no such command %d.\n", __func__, pdrvPvt->portName, pasynUser->reason);
@@ -1167,6 +1191,20 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 				*dat++ = *rep++;
 			}
 
+			break;
+		}
+		
+		case FINS_MM_READ:
+		{
+			int i;
+			MultiMemAreaPair *ptrs = (MultiMemAreaPair *) &pdrvPvt->message[RESP];
+			epicsUInt16 *ptrd = (epicsUInt16 *) data;
+			
+			for (i = 0; i < nelements; i++)
+			{
+				ptrd[i] = (epicsUInt16) BSWAP16(ptrs[i].address);
+			}
+			
 			break;
 		}
 		
@@ -1569,7 +1607,6 @@ static asynStatus octetWrite(void *pvt, asynUser *pasynUser, const char *data, s
 	switch (pasynUser->reason)
 	{
 		case FINS_CYCLE_TIME_RESET:
-		case FINS_SET_RESET_CANCEL:
 		{
 			break;
 		}
@@ -1645,7 +1682,7 @@ static asynStatus ReadInt32(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 			break;
 		}
 
-	/* user select these when they don't want to initialise the record by performing a read first */
+	/* user selects these when they don't want to initialise the record by performing a read first */
 	
 		case FINS_DM_WRITE_NOREAD:
 		case FINS_IO_WRITE_NOREAD:
@@ -1658,6 +1695,13 @@ static asynStatus ReadInt32(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 			return (asynError);
 		}
 
+	/* don't try and perform a read to initialise the PV */
+	
+		case FINS_SET_RESET_CANCEL:
+		{
+			return (asynError);
+		}
+		
 		default:
 		{
 			asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, no such command %d.\n", __func__, pdrvPvt->portName, addr, pasynUser->reason);
@@ -1705,6 +1749,7 @@ static asynStatus WriteInt32(void *pvt, asynUser *pasynUser, epicsInt32 value)
 		case FINS_AR_WRITE_32_NOREAD:
 		case FINS_IO_WRITE_32:
 		case FINS_IO_WRITE_32_NOREAD:
+		case FINS_SET_RESET_CANCEL:
 		{
 			break;
 		}
@@ -1870,6 +1915,23 @@ static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *val
 			if (nelements != FINS_CLOCK_READ_LEN)
 			{
 				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, FINS_CLOCK_READ size != %d.\n", __func__, pdrvPvt->portName, addr, FINS_CLOCK_READ_LEN);
+				return (asynError);
+			}
+			
+			break;
+		}
+		
+		case FINS_MM_READ:
+		{
+			if (nelements > FINS_MM_MAX_ADDRS)
+			{
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, FINS_MM_READ size > %d.\n", __func__, pdrvPvt->portName, addr, FINS_MM_MAX_ADDRS);
+				return (asynError);
+			}
+			
+			if (addr >= FINS_MM_MAX_ENTRIES)
+			{
+				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, FINS_MM_READ invalid entry.\n", __func__, pdrvPvt->portName, addr);
 				return (asynError);
 			}
 			
@@ -2336,6 +2398,11 @@ asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, co
 		if (strcmp("FINS_SET_RESET_CANCEL", drvInfo) == 0)
 		{
 			pasynUser->reason = FINS_SET_RESET_CANCEL;
+		}
+		else
+		if (strcmp("FINS_MM_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_MM_READ;
 		}
 		else
 		if (strcmp("FINS_EXPLICIT", drvInfo) == 0)
@@ -2929,5 +2996,77 @@ static void finsTestRegister(void)
 }
 
 epicsExportRegistrar(finsTestRegister);
+
+/**************************************************************************************************/
+
+/* Create a list of 'memory area' & 'address' pairs for the Read Multiple Memory Area command */
+
+int finsMultiMemoryAreaInit(const int entry, char *s)
+{
+	puts(s);
+	
+	if ((entry < 0) || (entry >= FINS_MM_MAX_ENTRIES)) return (-1);
+
+	{
+		int num = 0, i, p = 0;
+
+		do
+		{
+			i = sscanf(s += num, "%hi%hi,%n", &MM[entry].area[p], &MM[entry].address[p], &num);
+			
+/*			if (i == 2) printf(" %d %d %x %x\n", i, num, MM[entry].area[p], MM[entry].address[p]); */
+			
+			p++;
+		}
+		while ((i == 2) && (p < FINS_MM_MAX_ADDRS));
+	}
+	
+	return (0);
+}
+
+int finsMultiMemoryAreaDump(void)
+{
+	int i, j;
+	
+	for (i = 0; i < FINS_MM_MAX_ENTRIES; i++)
+	{
+		printf("%2d: ", i);
+		
+		for (j = 0; j < FINS_MM_MAX_ADDRS; j++)
+		{
+			if (MM[i].area[j] == 0x00) break;
+			
+			printf("%s0x%02x 0x%04x", (j > 0) ? ", " : "", MM[i].area[j], MM[i].address[j]);
+		}
+		
+		puts("");
+	}
+	
+	return (0);
+}
+
+static const iocshArg finsMultiMemoryAreaInitArg0 = { "area/address", iocshArgString };
+static const iocshArg finsMultiMemoryAreaInitArg1 = { "entry", iocshArgInt };
+
+static const iocshArg *finsMultiMemoryAreaInitArgs[] = { &finsMultiMemoryAreaInitArg0, &finsMultiMemoryAreaInitArg1};
+static const iocshFuncDef finsMultiMemoryAreaInitFuncDef = { "finsMultiMemoryAreaInit", 1, finsMultiMemoryAreaInitArgs};
+
+static void finsMultiMemoryAreaInitCallFunc(const iocshArgBuf *args)
+{
+	finsMultiMemoryAreaInit(args[0].ival, args[1].sval);
+}
+
+static void finsMultiMemoryAreaInitRegister(void)
+{
+	static int firstTime = 1;
+	
+	if (firstTime)
+	{
+		firstTime = 0;
+		iocshRegister(&finsMultiMemoryAreaInitFuncDef, finsMultiMemoryAreaInitCallFunc);
+	}
+}
+
+epicsExportRegistrar(finsMultiMemoryAreaInitRegister);
 
 /**************************************************************************************************/
