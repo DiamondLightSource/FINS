@@ -406,7 +406,7 @@ static int finsInit(const char *portName, const char *dev, const int snode)
 		return (-1);
 	}
 	
-/* find the octect interface of our parent port ignoring the interpose layer */
+/* find the octet interface of our parent port ignoring the interpose layer */
 
 	poctetasynInterface = pasynManager->findInterface(pdrvPvt->pasynUser, asynOctetType, 0);
 		
@@ -1458,7 +1458,7 @@ static int finsWrite(drvPvt * const pdrvPvt, asynUser *pasynUser, const void *da
 	
 	epicsTimeGetCurrent(&ets);
 	
-/* set the time out of writes to the asynOctect port to be the time out specified in the record */
+/* set the time out of writes to the asynOctet port to be the time out specified in the record */
 
 	if (pasynUser->timeout <= 0.0)
 	{
