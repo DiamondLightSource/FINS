@@ -90,6 +90,7 @@
 #include <epicsEndian.h>
 #include <epicsThread.h>
 #include <errlog.h>
+#include <ellLib.h>
 
 #include <asynDriver.h>
 #include <asynDrvUser.h>
@@ -177,7 +178,9 @@ static asynDrvUser ifaceDrvUser = { drvUserCreate, drvUserGetType, drvUserDestro
 extern int errno;
 static int finsInit(const char *portName, const char *dev, const int snode);
 
-static MultiMemArea MM[10];
+/* double linked list for Multiple Memory reads */
+
+static ELLLIST mmList;
 
 /**************************************************************************************************/
 
@@ -803,15 +806,20 @@ static int BuildReadMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const s
 		case FINS_MM_READ:
 		{
 			int i;
+			MultiMemArea *MM;
 			
 			pdrvPvt->mrc = 0x01;
 			pdrvPvt->src = 0x04;
 						
-			for (i = 0; (i < nelements) && (MM[address].area[i]); i++)
+			MM = (MultiMemArea *) ellNth(&mmList, address + 1);
+			
+			printf("MM %p, address %d\n", MM, address);
+			
+			for (i = 0; (i < nelements) && (MM->area[i]); i++)
 			{
-				pdrvPvt->message[COM + 4 * i + 0] = MM[address].area[i];
-				pdrvPvt->message[COM + 4 * i + 1] = MM[address].address[i] >> 8;
-				pdrvPvt->message[COM + 4 * i + 2] = MM[address].address[i] & 0xff;
+				pdrvPvt->message[COM + 4 * i + 0] = MM->area[i];
+				pdrvPvt->message[COM + 4 * i + 1] = MM->address[i] >> 8;
+				pdrvPvt->message[COM + 4 * i + 2] = MM->address[i] & 0xff;
 				pdrvPvt->message[COM + 4 * i + 3] = 0x00;
 			}
 			
@@ -1929,7 +1937,7 @@ static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *val
 				return (asynError);
 			}
 			
-			if (addr >= FINS_MM_MAX_ENTRIES)
+			if (addr >= ellCount(&mmList))
 			{
 				asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, addr %d, FINS_MM_READ invalid entry.\n", __func__, pdrvPvt->portName, addr);
 				return (asynError);
@@ -3001,21 +3009,37 @@ epicsExportRegistrar(finsTestRegister);
 
 /* Create a list of 'memory area' & 'address' pairs for the Read Multiple Memory Area command */
 
-int finsMultiMemoryAreaInit(const int entry, char *s)
+static int initlist = 1;
+
+int finsMultiMemoryAreaInit(char *s)
 {
-	puts(s);
+	MultiMemArea *MM;
+
+/* initialise the linked list */
+
+	if (initlist)
+	{
+		initlist = 0;
+		
+		ellInit(&mmList);
+	}
+
+/* allocate space to 10 memory type / memory address pairs */
 	
-	if ((entry < 0) || (entry >= FINS_MM_MAX_ENTRIES)) return (-1);
+	MM = (MultiMemArea *) callocMustSucceed(1, sizeof(MultiMemArea), "finsMultiMemoryAreaInit");
+		
+/* and add to our list */
+
+	ellAdd(&mmList, &(MM->node));
+	
+/* scan for memory type / memory address pairs */
 
 	{
 		int num = 0, i, p = 0;
 
 		do
 		{
-			i = sscanf(s += num, "%hi%hi,%n", &MM[entry].area[p], &MM[entry].address[p], &num);
-			
-/*			if (i == 2) printf(" %d %d %x %x\n", i, num, MM[entry].area[p], MM[entry].address[p]); */
-			
+			i = sscanf(s += num, "%hi%hi,%n", &(MM->area[p]), &(MM->address[p]), &num);
 			p++;
 		}
 		while ((i == 2) && (p < FINS_MM_MAX_ADDRS));
@@ -3027,16 +3051,17 @@ int finsMultiMemoryAreaInit(const int entry, char *s)
 int finsMultiMemoryAreaDump(void)
 {
 	int i, j;
+	MultiMemArea *MM;
 	
-	for (i = 0; i < FINS_MM_MAX_ENTRIES; i++)
+	for (i = 0, MM = (MultiMemArea *) ellFirst(&mmList); MM; i++, MM = (MultiMemArea *) ellNext(&(MM->node)))
 	{
 		printf("%2d: ", i);
 		
 		for (j = 0; j < FINS_MM_MAX_ADDRS; j++)
 		{
-			if (MM[i].area[j] == 0x00) break;
+			if (MM->area[j] == 0x00) break;
 			
-			printf("%s0x%02x 0x%04x", (j > 0) ? ", " : "", MM[i].area[j], MM[i].address[j]);
+			printf("%s0x%02x 0x%04x", (j > 0) ? ", " : "", MM->area[j], MM->address[j]);
 		}
 		
 		puts("");
@@ -3046,14 +3071,13 @@ int finsMultiMemoryAreaDump(void)
 }
 
 static const iocshArg finsMultiMemoryAreaInitArg0 = { "area/address", iocshArgString };
-static const iocshArg finsMultiMemoryAreaInitArg1 = { "entry", iocshArgInt };
 
-static const iocshArg *finsMultiMemoryAreaInitArgs[] = { &finsMultiMemoryAreaInitArg0, &finsMultiMemoryAreaInitArg1};
+static const iocshArg *finsMultiMemoryAreaInitArgs[] = { &finsMultiMemoryAreaInitArg0};
 static const iocshFuncDef finsMultiMemoryAreaInitFuncDef = { "finsMultiMemoryAreaInit", 1, finsMultiMemoryAreaInitArgs};
 
 static void finsMultiMemoryAreaInitCallFunc(const iocshArgBuf *args)
 {
-	finsMultiMemoryAreaInit(args[0].ival, args[1].sval);
+	finsMultiMemoryAreaInit(args[0].sval);
 }
 
 static void finsMultiMemoryAreaInitRegister(void)

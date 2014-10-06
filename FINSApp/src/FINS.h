@@ -55,7 +55,6 @@
 #define FINS_CPU_STATE_LEN	26
 
 #define FINS_MM_MAX_ADDRS	10
-#define FINS_MM_MAX_ENTRIES	10
 
 #define ONE_ELEMENT	(1)
 
@@ -182,6 +181,8 @@ typedef struct
 
 typedef struct MultiMemArea
 {
+	ELLNODE node;
+	
 	epicsUInt16 area[10];
 	epicsUInt16 address[10];
 	
