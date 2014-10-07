@@ -812,9 +812,7 @@ static int BuildReadMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const s
 			pdrvPvt->src = 0x04;
 						
 			MM = (MultiMemArea *) ellNth(&mmList, address + 1);
-			
-			printf("MM %p, address %d\n", MM, address);
-			
+						
 			for (i = 0; (i < nelements) && (MM->area[i]); i++)
 			{
 				pdrvPvt->message[COM + 4 * i + 0] = MM->area[i];
