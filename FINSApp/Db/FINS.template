@@ -365,7 +365,7 @@ record(subArray, "$(device):SOFTWARE")
 record(calc, "$(device):SOFTMOD")
 {
 	field(INPA, "$(device):SOFTWARE MS")
-	field(CALC, "FLOOR(A * 0.001)")
+	field(CALC, "A >> 12")
 	
 	field(FLNK, "$(device):REVISION")
 }
@@ -398,7 +398,7 @@ record(mbbi, "$(device):PLCTYPE")
 	field(EIVL, "8")
 	field(ZRST, "Invalid")
 	field(ONST, "Linac")
-	field(TWST, "Machine Protect")
+	field(TWST, "Machine Prot")
 	field(THST, "Gas Brem")
 	field(FRST, "Vac Four Valve")
 	field(FVST, "Undefined")
