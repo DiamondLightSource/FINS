@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 464
-y 568
-w 500
-h 190
+x 792
+y 363
+w 221
+h 520
 font "arial-medium-r-18.0"
 ctlFont "arial-medium-r-18.0"
 btnFont "arial-medium-r-18.0"
@@ -25,20 +25,76 @@ snapToGrid
 disableScroll
 endScreenProperties
 
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 350
+w 200
+h 110
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 200
+w 200
+h 140
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 130
+w 200
+h 60
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 40
+w 200
+h 80
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 0
 y 0
-w 500
+w 220
 h 30
 font "device-medium-r-18.0"
 fontAlign "center"
 fgColor index 14
-bgColor index 56
+bgColor index 63
 value {
   "$(device)"
 }
@@ -49,16 +105,17 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 90
-y 40
+x 100
+y 50
 w 110
 h 20
 controlPv "$(device):MODEL:CPU"
-font "courier-medium-r-14.0"
-fgColor index 16
+font "courier-medium-r-12.0"
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -70,16 +127,17 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 90
+x 100
 y 70
 w 110
 h 20
 controlPv "$(device):MODEL:ETN"
-font "courier-medium-r-14.0"
-fgColor index 16
+font "courier-medium-r-12.0"
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -91,17 +149,17 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 90
-y 100
+x 100
+y 90
 w 110
 h 20
 controlPv "$(device):MODE"
-font "courier-medium-r-14.0"
-fontAlign "center"
-fgColor index 16
+font "courier-medium-r-12.0"
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -113,17 +171,18 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 440
-y 40
+x 150
+y 360
 w 50
 h 20
 controlPv "$(device):CYCLE:MEAN"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -135,17 +194,18 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 440
-y 70
+x 150
+y 380
 w 50
 h 20
 controlPv "$(device):CYCLE:MAX"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -157,17 +217,18 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 440
-y 100
+x 150
+y 400
 w 50
 h 20
 controlPv "$(device):CYCLE:MIN"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -179,17 +240,18 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 290
-y 40
+x 150
+y 270
 w 50
 h 20
 controlPv "$(device):UNITS"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -201,17 +263,18 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 290
-y 70
+x 150
+y 290
 w 50
 h 20
 controlPv "$(device):POWERINTS"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -223,17 +286,18 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
-x 290
-y 100
+x 150
+y 310
 w 50
 h 20
 controlPv "$(device):POWERON"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -246,9 +310,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 210
-y 40
+release 1
+x 20
+y 270
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -265,9 +329,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 210
-y 70
+release 1
+x 20
+y 290
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -284,9 +348,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 210
-y 100
+release 1
+x 20
+y 310
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -303,9 +367,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 360
-y 40
+release 1
+x 20
+y 360
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -322,9 +386,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 360
-y 70
+release 1
+x 20
+y 380
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -341,9 +405,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 360
-y 100
+release 1
+x 20
+y 400
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -360,9 +424,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 10
-y 40
+release 1
+x 20
+y 50
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -379,8 +443,8 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 10
+release 1
+x 20
 y 70
 w 70
 h 20
@@ -398,9 +462,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 10
-y 100
+release 1
+x 20
+y 90
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -416,18 +480,19 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
 x 90
-y 130
+y 140
 w 30
 h 20
 controlPv "$(device):CLOCK:YEAR"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 newPos
@@ -438,18 +503,19 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
 x 130
-y 130
+y 140
 w 30
 h 20
 controlPv "$(device):CLOCK:MON"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 newPos
@@ -460,18 +526,19 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
 x 170
-y 130
+y 140
 w 30
 h 20
 controlPv "$(device):CLOCK:DAY"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 newPos
@@ -482,7 +549,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
 x 90
 y 160
@@ -492,9 +559,11 @@ controlPv "$(device):CLOCK:HOUR"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
+fieldLen "2"
 nullColor index 0
 newPos
 objType "monitors"
@@ -504,7 +573,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
 x 130
 y 160
@@ -514,8 +583,9 @@ controlPv "$(device):CLOCK:MIN"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
 nullColor index 0
 newPos
@@ -526,7 +596,7 @@ endObjectProperties
 object activeXTextDspClass:noedit
 beginObjectProperties
 major 4
-minor 4
+minor 6
 release 0
 x 170
 y 160
@@ -536,9 +606,11 @@ controlPv "$(device):CLOCK:SEC"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 16
+fgColor index 18
 bgColor index 11
+useDisplayBg
 limitsFromDb
+fieldLen "2"
 nullColor index 0
 newPos
 objType "monitors"
@@ -550,8 +622,8 @@ beginObjectProperties
 major 4
 minor 0
 release 1
-x 470
-y 60
+x 50
+y 380
 w 0
 h 0
 lineColor index 10
@@ -559,10 +631,10 @@ fillColor index 0
 lineWidth 2
 numPoints 1
 xPoints {
-  0 470
+  0 50
 }
 yPoints {
-  0 60
+  0 380
 }
 endObjectProperties
 
@@ -571,9 +643,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 10
-y 130
+release 1
+x 20
+y 140
 w 50
 h 20
 font "arial-medium-r-12.0"
@@ -590,8 +662,8 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 10
+release 1
+x 20
 y 160
 w 50
 h 20
@@ -602,5 +674,210 @@ useDisplayBg
 value {
   "Time"
 }
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 210
+w 70
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Serial #"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 230
+w 70
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Software #"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 250
+w 70
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "PLC Type"
+}
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 100
+y 250
+w 100
+h 20
+controlPv "$(device):PLCTYPE"
+font "courier-medium-r-12.0"
+fontAlign "right"
+fgColor index 18
+bgColor index 11
+useDisplayBg
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 150
+y 230
+w 50
+h 20
+controlPv "$(device):SOFTWARE"
+format "hex"
+font "courier-medium-r-12.0"
+fontAlign "right"
+fgColor index 18
+bgColor index 11
+useDisplayBg
+limitsFromDb
+nullColor index 0
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 150
+y 210
+w 50
+h 20
+controlPv "$(device):SERIALID"
+font "courier-medium-r-12.0"
+fontAlign "right"
+fgColor index 18
+bgColor index 11
+useDisplayBg
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 140
+y 430
+w 60
+h 20
+fgColor index 14
+onColor index 5
+offColor index 4
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):CYCLE:RESET"
+pressValue "1"
+offLabel "Reset"
+3d
+useEnumNumeric
+font "arial-medium-r-10.0"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 470
+w 200
+h 40
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 480
+w 110
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Forced Bits Reset"
+}
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 140
+y 480
+w 60
+h 20
+fgColor index 14
+onColor index 5
+offColor index 4
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):FORCE:RESET.PROC"
+pressValue "1"
+offLabel "Reset"
+3d
+useEnumNumeric
+font "arial-medium-r-10.0"
 endObjectProperties
 
