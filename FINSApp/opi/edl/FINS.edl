@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 792
-y 363
+x 461
+y 378
 w 221
-h 520
+h 550
 font "arial-medium-r-18.0"
 ctlFont "arial-medium-r-18.0"
 btnFont "arial-medium-r-18.0"
@@ -32,7 +32,7 @@ major 4
 minor 0
 release 0
 x 10
-y 350
+y 380
 w 200
 h 110
 lineColor index 14
@@ -46,7 +46,7 @@ major 4
 minor 0
 release 0
 x 10
-y 200
+y 230
 w 200
 h 140
 lineColor index 14
@@ -60,7 +60,7 @@ major 4
 minor 0
 release 0
 x 10
-y 130
+y 160
 w 200
 h 60
 lineColor index 14
@@ -76,7 +76,7 @@ release 0
 x 10
 y 40
 w 200
-h 80
+h 110
 lineColor index 14
 fillColor index 0
 endObjectProperties
@@ -174,7 +174,7 @@ major 4
 minor 6
 release 0
 x 150
-y 360
+y 390
 w 50
 h 20
 controlPv "$(device):CYCLE:MEAN"
@@ -197,7 +197,7 @@ major 4
 minor 6
 release 0
 x 150
-y 380
+y 410
 w 50
 h 20
 controlPv "$(device):CYCLE:MAX"
@@ -220,7 +220,7 @@ major 4
 minor 6
 release 0
 x 150
-y 400
+y 430
 w 50
 h 20
 controlPv "$(device):CYCLE:MIN"
@@ -243,7 +243,7 @@ major 4
 minor 6
 release 0
 x 150
-y 270
+y 300
 w 50
 h 20
 controlPv "$(device):UNITS"
@@ -266,7 +266,7 @@ major 4
 minor 6
 release 0
 x 150
-y 290
+y 320
 w 50
 h 20
 controlPv "$(device):POWERINTS"
@@ -289,7 +289,7 @@ major 4
 minor 6
 release 0
 x 150
-y 310
+y 340
 w 50
 h 20
 controlPv "$(device):POWERON"
@@ -312,7 +312,7 @@ major 4
 minor 1
 release 1
 x 20
-y 270
+y 300
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -331,7 +331,7 @@ major 4
 minor 1
 release 1
 x 20
-y 290
+y 320
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -350,7 +350,7 @@ major 4
 minor 1
 release 1
 x 20
-y 310
+y 340
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -369,7 +369,7 @@ major 4
 minor 1
 release 1
 x 20
-y 360
+y 390
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -388,7 +388,7 @@ major 4
 minor 1
 release 1
 x 20
-y 380
+y 410
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -407,7 +407,7 @@ major 4
 minor 1
 release 1
 x 20
-y 400
+y 430
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -483,7 +483,7 @@ major 4
 minor 6
 release 0
 x 90
-y 140
+y 170
 w 30
 h 20
 controlPv "$(device):CLOCK:YEAR"
@@ -506,7 +506,7 @@ major 4
 minor 6
 release 0
 x 130
-y 140
+y 170
 w 30
 h 20
 controlPv "$(device):CLOCK:MON"
@@ -529,7 +529,7 @@ major 4
 minor 6
 release 0
 x 170
-y 140
+y 170
 w 30
 h 20
 controlPv "$(device):CLOCK:DAY"
@@ -552,7 +552,7 @@ major 4
 minor 6
 release 0
 x 90
-y 160
+y 190
 w 30
 h 20
 controlPv "$(device):CLOCK:HOUR"
@@ -576,7 +576,7 @@ major 4
 minor 6
 release 0
 x 130
-y 160
+y 190
 w 30
 h 20
 controlPv "$(device):CLOCK:MIN"
@@ -599,7 +599,7 @@ major 4
 minor 6
 release 0
 x 170
-y 160
+y 190
 w 30
 h 20
 controlPv "$(device):CLOCK:SEC"
@@ -623,7 +623,7 @@ major 4
 minor 0
 release 1
 x 50
-y 380
+y 410
 w 0
 h 0
 lineColor index 10
@@ -634,7 +634,7 @@ xPoints {
   0 50
 }
 yPoints {
-  0 380
+  0 410
 }
 endObjectProperties
 
@@ -645,7 +645,7 @@ major 4
 minor 1
 release 1
 x 20
-y 140
+y 170
 w 50
 h 20
 font "arial-medium-r-12.0"
@@ -664,7 +664,7 @@ major 4
 minor 1
 release 1
 x 20
-y 160
+y 190
 w 50
 h 20
 font "arial-medium-r-12.0"
@@ -683,7 +683,7 @@ major 4
 minor 1
 release 1
 x 20
-y 210
+y 240
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -702,7 +702,7 @@ major 4
 minor 1
 release 1
 x 20
-y 230
+y 260
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -721,7 +721,7 @@ major 4
 minor 1
 release 1
 x 20
-y 250
+y 280
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -740,7 +740,7 @@ major 4
 minor 6
 release 0
 x 100
-y 250
+y 280
 w 100
 h 20
 controlPv "$(device):PLCTYPE"
@@ -763,7 +763,7 @@ major 4
 minor 6
 release 0
 x 150
-y 230
+y 260
 w 50
 h 20
 controlPv "$(device):SOFTWARE"
@@ -786,7 +786,7 @@ major 4
 minor 6
 release 0
 x 150
-y 210
+y 240
 w 50
 h 20
 controlPv "$(device):SERIALID"
@@ -809,7 +809,7 @@ major 4
 minor 1
 release 0
 x 140
-y 430
+y 460
 w 60
 h 20
 fgColor index 14
@@ -832,7 +832,7 @@ major 4
 minor 0
 release 0
 x 10
-y 470
+y 500
 w 200
 h 40
 lineColor index 14
@@ -846,7 +846,7 @@ major 4
 minor 1
 release 1
 x 20
-y 480
+y 510
 w 110
 h 20
 font "arial-medium-r-12.0"
@@ -865,7 +865,7 @@ major 4
 minor 1
 release 0
 x 140
-y 480
+y 510
 w 60
 h 20
 fgColor index 14
@@ -876,6 +876,29 @@ botShadowColor index 11
 controlPv "$(device):FORCE:RESET.PROC"
 pressValue "1"
 offLabel "Reset"
+3d
+useEnumNumeric
+font "arial-medium-r-10.0"
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 140
+y 120
+w 60
+h 20
+fgColor index 14
+onColor index 5
+offColor index 4
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):MODEL:CPU.PROC"
+pressValue "1"
+offLabel "Update"
 3d
 useEnumNumeric
 font "arial-medium-r-10.0"
