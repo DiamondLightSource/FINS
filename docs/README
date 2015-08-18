@@ -163,3 +163,20 @@ This example shows that there is no significant delay between receiving one mess
 the next. This is an indication that the link is saturated. The time taken for these messages to
 complete is 0.06 to 0.07 seconds for messages of up to 80 bytes, including the header, for a baud
 rate of 57600 to a CJ1M/CPU12 PLC. This equates to about 14 messages per second.
+
+FINS Simulator
+--------------
+
+The FINS simulator is only built if appropriate lines in FINSApp/src/Makefile are
+uncommented.
+
+To connect to the FINS simulator use:
+
+    finsSIMInit(<port name>)
+
+where
+
+* port name - The name of the asyn port to create.
+
+When using the simulator all FINS read and write requests retrieve and store data
+from/to a local memory structure, no data is transferred into or out of the IOC.
