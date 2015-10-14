@@ -1,3 +1,4 @@
+from iocbuilder import AutoSubstitution, Substitution, ModuleBase
 from iocbuilder import Device, SetSimulation
 from iocbuilder.arginfo import *
 from iocbuilder.modules.asyn import Asyn, AsynPort
@@ -55,3 +56,5 @@ class FINSHostlink(FINSPort):
         asyn_port = Ident("Asyn port for serial comms (possibly over terminal server)", AsynPort),
         name = Simple("Asyn port name created by FINS driver"))     
     
+class FINSTemplate(AutoSubstitution):
+    TemplateFile = 'FINS.template'
