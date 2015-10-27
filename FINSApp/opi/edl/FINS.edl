@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 461
-y 378
+x 934
+y 416
 w 221
-h 550
+h 620
 font "arial-medium-r-18.0"
 ctlFont "arial-medium-r-18.0"
 btnFont "arial-medium-r-18.0"
@@ -32,7 +32,7 @@ major 4
 minor 0
 release 0
 x 10
-y 380
+y 450
 w 200
 h 110
 lineColor index 14
@@ -46,7 +46,7 @@ major 4
 minor 0
 release 0
 x 10
-y 230
+y 300
 w 200
 h 140
 lineColor index 14
@@ -174,7 +174,7 @@ major 4
 minor 6
 release 0
 x 150
-y 390
+y 460
 w 50
 h 20
 controlPv "$(device):CYCLE:MEAN"
@@ -197,7 +197,7 @@ major 4
 minor 6
 release 0
 x 150
-y 410
+y 480
 w 50
 h 20
 controlPv "$(device):CYCLE:MAX"
@@ -220,7 +220,7 @@ major 4
 minor 6
 release 0
 x 150
-y 430
+y 500
 w 50
 h 20
 controlPv "$(device):CYCLE:MIN"
@@ -243,7 +243,7 @@ major 4
 minor 6
 release 0
 x 150
-y 300
+y 370
 w 50
 h 20
 controlPv "$(device):UNITS"
@@ -266,7 +266,7 @@ major 4
 minor 6
 release 0
 x 150
-y 320
+y 390
 w 50
 h 20
 controlPv "$(device):POWERINTS"
@@ -289,7 +289,7 @@ major 4
 minor 6
 release 0
 x 150
-y 340
+y 410
 w 50
 h 20
 controlPv "$(device):POWERON"
@@ -312,7 +312,7 @@ major 4
 minor 1
 release 1
 x 20
-y 300
+y 370
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -331,7 +331,7 @@ major 4
 minor 1
 release 1
 x 20
-y 320
+y 390
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -350,7 +350,7 @@ major 4
 minor 1
 release 1
 x 20
-y 340
+y 410
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -369,7 +369,7 @@ major 4
 minor 1
 release 1
 x 20
-y 390
+y 460
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -388,7 +388,7 @@ major 4
 minor 1
 release 1
 x 20
-y 410
+y 480
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -407,7 +407,7 @@ major 4
 minor 1
 release 1
 x 20
-y 430
+y 500
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -623,7 +623,7 @@ major 4
 minor 0
 release 1
 x 50
-y 410
+y 480
 w 0
 h 0
 lineColor index 10
@@ -634,7 +634,7 @@ xPoints {
   0 50
 }
 yPoints {
-  0 410
+  0 480
 }
 endObjectProperties
 
@@ -683,7 +683,7 @@ major 4
 minor 1
 release 1
 x 20
-y 240
+y 310
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -702,7 +702,7 @@ major 4
 minor 1
 release 1
 x 20
-y 260
+y 330
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -721,7 +721,7 @@ major 4
 minor 1
 release 1
 x 20
-y 280
+y 350
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -740,7 +740,7 @@ major 4
 minor 6
 release 0
 x 100
-y 280
+y 350
 w 100
 h 20
 controlPv "$(device):PLCTYPE"
@@ -763,7 +763,7 @@ major 4
 minor 6
 release 0
 x 150
-y 260
+y 330
 w 50
 h 20
 controlPv "$(device):SOFTWARE"
@@ -786,7 +786,7 @@ major 4
 minor 6
 release 0
 x 150
-y 240
+y 310
 w 50
 h 20
 controlPv "$(device):SERIALID"
@@ -809,7 +809,7 @@ major 4
 minor 1
 release 0
 x 140
-y 460
+y 530
 w 60
 h 20
 fgColor index 14
@@ -832,7 +832,7 @@ major 4
 minor 0
 release 0
 x 10
-y 500
+y 570
 w 200
 h 40
 lineColor index 14
@@ -846,7 +846,7 @@ major 4
 minor 1
 release 1
 x 20
-y 510
+y 580
 w 110
 h 20
 font "arial-medium-r-12.0"
@@ -865,7 +865,7 @@ major 4
 minor 1
 release 0
 x 140
-y 510
+y 580
 w 60
 h 20
 fgColor index 14
@@ -902,5 +902,132 @@ offLabel "Update"
 3d
 useEnumNumeric
 font "arial-medium-r-10.0"
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 230
+w 200
+h 60
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 90
+y 240
+w 30
+h 20
+controlPv "$(device):START:DAYS"
+format "hex"
+font "courier-medium-r-12.0"
+fontAlign "right"
+fgColor index 18
+bgColor index 11
+useDisplayBg
+limitsFromDb
+nullColor index 0
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 90
+y 260
+w 30
+h 20
+controlPv "$(device):START:HOUR"
+format "hex"
+font "courier-medium-r-12.0"
+fontAlign "right"
+fgColor index 18
+bgColor index 11
+useDisplayBg
+limitsFromDb
+fieldLen "2"
+nullColor index 0
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 130
+y 260
+w 30
+h 20
+controlPv "$(device):START:MINS"
+format "hex"
+font "courier-medium-r-12.0"
+fontAlign "right"
+fgColor index 18
+bgColor index 11
+useDisplayBg
+limitsFromDb
+nullColor index 0
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 170
+y 260
+w 30
+h 20
+controlPv "$(device):START:SECS"
+format "hex"
+font "courier-medium-r-12.0"
+fontAlign "right"
+fgColor index 18
+bgColor index 11
+useDisplayBg
+limitsFromDb
+fieldLen "2"
+nullColor index 0
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 240
+w 50
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Start"
+}
 endObjectProperties
 
