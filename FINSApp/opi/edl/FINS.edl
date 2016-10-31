@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 934
-y 416
-w 221
-h 620
+x 547
+y 260
+w 430
+h 610
 font "arial-medium-r-18.0"
 ctlFont "arial-medium-r-18.0"
 btnFont "arial-medium-r-18.0"
@@ -32,7 +32,35 @@ major 4
 minor 0
 release 0
 x 10
-y 450
+y 380
+w 200
+h 220
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 220
+y 230
+w 200
+h 280
+lineColor index 14
+fillColor index 0
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 220
+y 40
 w 200
 h 110
 lineColor index 14
@@ -46,7 +74,7 @@ major 4
 minor 0
 release 0
 x 10
-y 300
+y 230
 w 200
 h 140
 lineColor index 14
@@ -89,7 +117,7 @@ minor 1
 release 1
 x 0
 y 0
-w 220
+w 430
 h 30
 font "device-medium-r-18.0"
 fontAlign "center"
@@ -173,8 +201,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 150
-y 460
+x 360
+y 50
 w 50
 h 20
 controlPv "$(device):CYCLE:MEAN"
@@ -196,8 +224,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 150
-y 480
+x 360
+y 70
 w 50
 h 20
 controlPv "$(device):CYCLE:MAX"
@@ -219,8 +247,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 150
-y 500
+x 360
+y 90
 w 50
 h 20
 controlPv "$(device):CYCLE:MIN"
@@ -243,7 +271,7 @@ major 4
 minor 6
 release 0
 x 150
-y 370
+y 300
 w 50
 h 20
 controlPv "$(device):UNITS"
@@ -266,7 +294,7 @@ major 4
 minor 6
 release 0
 x 150
-y 390
+y 320
 w 50
 h 20
 controlPv "$(device):POWERINTS"
@@ -289,7 +317,7 @@ major 4
 minor 6
 release 0
 x 150
-y 410
+y 340
 w 50
 h 20
 controlPv "$(device):POWERON"
@@ -312,7 +340,7 @@ major 4
 minor 1
 release 1
 x 20
-y 370
+y 300
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -331,7 +359,7 @@ major 4
 minor 1
 release 1
 x 20
-y 390
+y 320
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -350,7 +378,7 @@ major 4
 minor 1
 release 1
 x 20
-y 410
+y 340
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -368,8 +396,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 20
-y 460
+x 230
+y 50
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -387,8 +415,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 20
-y 480
+x 230
+y 70
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -406,8 +434,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 20
-y 500
+x 230
+y 90
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -622,8 +650,8 @@ beginObjectProperties
 major 4
 minor 0
 release 1
-x 50
-y 480
+x 260
+y 70
 w 0
 h 0
 lineColor index 10
@@ -631,10 +659,10 @@ fillColor index 0
 lineWidth 2
 numPoints 1
 xPoints {
-  0 50
+  0 260
 }
 yPoints {
-  0 480
+  0 70
 }
 endObjectProperties
 
@@ -683,7 +711,7 @@ major 4
 minor 1
 release 1
 x 20
-y 310
+y 240
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -702,7 +730,7 @@ major 4
 minor 1
 release 1
 x 20
-y 330
+y 260
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -721,7 +749,7 @@ major 4
 minor 1
 release 1
 x 20
-y 350
+y 280
 w 70
 h 20
 font "arial-medium-r-12.0"
@@ -740,7 +768,7 @@ major 4
 minor 6
 release 0
 x 100
-y 350
+y 280
 w 100
 h 20
 controlPv "$(device):PLCTYPE"
@@ -763,7 +791,7 @@ major 4
 minor 6
 release 0
 x 150
-y 330
+y 260
 w 50
 h 20
 controlPv "$(device):SOFTWARE"
@@ -786,7 +814,7 @@ major 4
 minor 6
 release 0
 x 150
-y 310
+y 240
 w 50
 h 20
 controlPv "$(device):SERIALID"
@@ -808,8 +836,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 140
-y 530
+x 350
+y 120
 w 60
 h 20
 fgColor index 14
@@ -831,8 +859,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 10
-y 570
+x 220
+y 560
 w 200
 h 40
 lineColor index 14
@@ -845,8 +873,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 20
-y 580
+x 230
+y 570
 w 110
 h 20
 font "arial-medium-r-12.0"
@@ -864,8 +892,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 140
-y 580
+x 350
+y 570
 w 60
 h 20
 fgColor index 14
@@ -910,8 +938,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 10
-y 230
+x 220
+y 160
 w 200
 h 60
 lineColor index 14
@@ -924,8 +952,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 90
-y 240
+x 300
+y 170
 w 30
 h 20
 controlPv "$(device):START:DAYS"
@@ -947,8 +975,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 90
-y 260
+x 300
+y 190
 w 30
 h 20
 controlPv "$(device):START:HOUR"
@@ -971,8 +999,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 130
-y 260
+x 340
+y 190
 w 30
 h 20
 controlPv "$(device):START:MINS"
@@ -994,8 +1022,8 @@ beginObjectProperties
 major 4
 minor 6
 release 0
-x 170
-y 260
+x 380
+y 190
 w 30
 h 20
 controlPv "$(device):START:SECS"
@@ -1018,8 +1046,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 20
-y 240
+x 230
+y 170
 w 50
 h 20
 font "arial-medium-r-12.0"
@@ -1028,6 +1056,549 @@ bgColor index 0
 useDisplayBg
 value {
   "Start"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 410
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "FALS"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 430
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 430
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Cycle Time"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 450
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Program"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 470
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "I/O Setting"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 490
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "I/O Point"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 510
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Inner Board"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 530
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Duplication"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 550
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "I/O Bus"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 570
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Memory"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 260
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Special I/O"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 280
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "CS1 CPU Bus"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 300
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Battery"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 320
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "SYSMAC Bus"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 340
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Special I/O"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 360
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "CPU Bus Unit"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 380
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Inner Board"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 400
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "I/O Verification"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 420
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "PC Setup"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 440
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Basic I/O"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 460
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Interrupt Task"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 480
+w 90
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "FAL"
+}
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 180
+y 410
+w 20
+h 20
+controlPv "$(device):CPU:NONFATAL"
+lineColor index 14
+onColor index 20
+offColor index 19
+numBits 1
+shift 6
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 180
+y 430
+w 20
+h 160
+controlPv "$(device):CPU:NONFATAL"
+lineColor index 14
+onColor index 20
+offColor index 19
+numBits 8
+shift 8
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 390
+y 260
+w 20
+h 180
+controlPv "$(device):CPU:FATAL"
+lineColor index 14
+onColor index 20
+offColor index 19
+numBits 9
+shift 2
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 390
+y 440
+w 20
+h 40
+controlPv "$(device):CPU:FATAL"
+lineColor index 14
+onColor index 20
+offColor index 19
+numBits 2
+shift 12
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 390
+y 480
+w 20
+h 20
+controlPv "$(device):CPU:FATAL"
+lineColor index 14
+onColor index 20
+offColor index 19
+numBits 1
+shift 15
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 390
+w 180
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Fatal Errors"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 230
+y 240
+w 180
+h 20
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Non Fatal Errors"
 }
 endObjectProperties
 

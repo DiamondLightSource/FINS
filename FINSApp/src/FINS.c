@@ -317,7 +317,7 @@ static int FINSnodeRequest(drvPvt * const pdrvPvt)
 	If we lose the link we have to resend the FINS Node Address Send command to obtain a new node address
 */
 
-void exceptCallback(asynUser *pasynUser, asynException exception)
+static void exceptCallback(asynUser *pasynUser, asynException exception)
 {
 	drvPvt * const pdrvPvt = (drvPvt *) pasynUser->drvUser;
 	int connected;
@@ -766,6 +766,8 @@ static int BuildReadMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const s
 		
 		case FINS_CPU_STATUS:
 		case FINS_CPU_MODE:
+		case FINS_CPU_FATAL:
+		case FINS_CPU_NONFATAL:
 		{
 			pdrvPvt->mrc = 0x06;
 			pdrvPvt->src = 0x01;
@@ -867,7 +869,7 @@ static int CheckData(drvPvt * const pdrvPvt, asynUser *pasynUser)
 	
 /* check response code */
 
-	if ((pdrvPvt->message[MRES] != 0x00) || (pdrvPvt->message[SRES] != 0x00))
+	if (pdrvPvt->message[MRES] != 0x00)
 	{
 		FINSerror(pdrvPvt, pasynUser, __func__, pdrvPvt->message[MRES], pdrvPvt->message[SRES]);
 		return (-1);
@@ -1131,6 +1133,26 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 		case FINS_CPU_MODE:
 		{
 			*(epicsInt32 *)(data) = pdrvPvt->message[RESP + 1];			
+			
+			break;
+		}
+
+		case FINS_CPU_FATAL:
+		{
+			epicsUInt16 *ptrs = (epicsUInt16 *) &pdrvPvt->message[RESP + 2];
+			epicsUInt32 *ptrd = (epicsUInt32 *) data;
+			
+			*ptrd = BSWAP16(*ptrs);
+
+			break;
+		}
+
+		case FINS_CPU_NONFATAL:
+		{
+			epicsUInt16 *ptrs = (epicsUInt16 *) &pdrvPvt->message[RESP + 4];
+			epicsUInt32 *ptrd = (epicsUInt32 *) data;
+			
+			*ptrd = BSWAP16(*ptrs);
 			
 			break;
 		}
@@ -1670,6 +1692,8 @@ static asynStatus ReadInt32(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 		case FINS_CYCLE_TIME_MIN:
 		case FINS_CPU_STATUS:
 		case FINS_CPU_MODE:
+		case FINS_CPU_FATAL:
+		case FINS_CPU_NONFATAL:
 		{
 			break;
 		}
@@ -2235,7 +2259,7 @@ static asynStatus drvUserGetType(void *drvPvt, asynUser *pasynUser, const char *
 	return (asynSuccess);
 }
 
-asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, const char **pptypeName, size_t *psize)
+static asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, const char **pptypeName, size_t *psize)
 {
 	drvPvt * const pdrvPvt = (drvPvt *) pvt;
 
@@ -2359,6 +2383,16 @@ asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvInfo, co
 		if (strcmp("FINS_CPU_MODE", drvInfo) == 0)
 		{
 			pasynUser->reason = FINS_CPU_MODE;
+		}
+		else
+		if (strcmp("FINS_CPU_FATAL", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_CPU_FATAL;
+		}
+		else
+		if (strcmp("FINS_CPU_NONFATAL", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_CPU_NONFATAL;
 		}
 		else
 		if (strcmp("FINS_MODEL", drvInfo) == 0)

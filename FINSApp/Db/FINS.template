@@ -81,7 +81,6 @@ record(waveform, "$(device):CYCLE")
 	field(NELM, "3")
 }
 
-
 record(subArray, "$(device):CYCLE:SUB0")
 {
 	field(INP,  "$(device):CYCLE MS CP")
@@ -104,7 +103,6 @@ record(ai, "$(device):CYCLE:MEAN")
 	field(PREC, "1")
 }
 
-
 record(subArray, "$(device):CYCLE:SUB1")
 {
 	field(INP,  "$(device):CYCLE MS CP")
@@ -126,7 +124,6 @@ record(ai, "$(device):CYCLE:MAX")
 	field(EGU,  "ms")
 	field(PREC, "1")
 }
-
 
 record(subArray, "$(device):CYCLE:SUB2")
 {
@@ -365,6 +362,59 @@ record(subArray, "$(device):CLOCK:SEC")
 	field(MALM, "7")
 	field(NELM, "1")
 	field(FTVL, "SHORT")
+}
+
+#---------------------------------------------------------------------------------------------------
+
+record(ai, "$(device):CPU:FATAL:0601")
+{
+	field(DTYP, "asynInt32")
+	field(INP,  "@asyn($(port), 0, 0) FINS_CPU_FATAL")
+	field(SCAN, "10 second")
+}
+
+record(ai, "$(device):CPU:NONFATAL:0601")
+{
+	field(DTYP, "asynInt32")
+	field(INP,  "@asyn($(port), 0, 0) FINS_CPU_NONFATAL")
+	field(SCAN, "10 second")
+}
+
+# 6 - FALS
+# 8 - Cycle time
+# 9 - Program
+# A - I/O setting
+# B - I/O point
+# C - Inner board
+# D - Duplication
+# E - I/O bus
+# F - Memory
+
+record(mbbiDirect, "$(device):CPU:FATAL")
+{
+	field(DESC, "CPU Fatal Errors")
+	field(INP,  "$(device):CPU:FATAL:0601 MS CP")
+	field(NOBT, "16")
+}
+
+# 2 - Special I/O unit setting
+# 3 - CS1 CPU bus unit setting
+# 4 - Battery
+# 5 - SYSMAC BUS
+# 6 - Special I/O
+# 7 - CPU bus unit
+# 8 - Inner board
+# 9 - I/O verification
+# A - PC setup
+# C - Basic I/O
+# D - Interrupt task
+# F - FAL
+
+record(mbbiDirect, "$(device):CPU:NONFATAL")
+{
+	field(DESC, "CPU Non Fatal Errors")
+	field(INP,  "$(device):CPU:NONFATAL:0601 MS CP")
+	field(NOBT, "16")
 }
 
 #---------------------------------------------------------------------------------------------------
