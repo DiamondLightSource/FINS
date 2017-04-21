@@ -126,7 +126,8 @@ enum FINS_COMMANDS
 	FINS_CLOCK_READ,
 	FINS_SET_RESET_CANCEL,
 	FINS_MM_READ,
-	FINS_EXPLICIT
+	FINS_EXPLICIT,
+	FINS_ECHO_TEST
 };
 
 static const char * const FINS_names[] = {
@@ -160,7 +161,8 @@ static const char * const FINS_names[] = {
 	"FINS_CLOCK_READ",
 	"FINS_SET_RESET_CANCEL",
 	"FINS_MM_READ",
-	"FINS_EXPLICIT"
+	"FINS_EXPLICIT",
+	"FINS_ECHO_TEST"
 };
 
 /* from asyn/drvAsynSerial/drvAsynIPPort.c */

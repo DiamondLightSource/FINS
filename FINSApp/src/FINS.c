@@ -37,6 +37,7 @@
 		w	FINS_IO_WRITE_32
 		w	FINS_IO_WRITE_32_NOREAD
 		w	FINS_SET_RESET_CANCEL
+		r	FINS_ECHO_TEST
 		
 		Int16Array
 		r	FINS_DM_READ
@@ -202,25 +203,23 @@ int finsDEVInit(const char *portName, const char *dev)
 	to set up the UDP connection.
 */
 
-int finsUDPInit(const char *portName, const char *address)
+int finsUDPInit(const char *portName, const char *address, const int node)
 {
-	char *adds;
-	
-	adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
+	char *adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
 
 	if(strchr(address, ':') == NULL)
-    {
-        // no port provided - default to 9600
-        epicsSnprintf(adds, strlen(address) + 10, "%s:9600 udp", address);
-    }
-    else
-    {
-        epicsSnprintf(adds, strlen(address) + 10, "%s udp", address);
-    }
+	{
+		// no port provided - default to 9600
+		epicsSnprintf(adds, strlen(address) + 10, "%s:9600 udp", address);
+	}
+	else
+	{
+		epicsSnprintf(adds, strlen(address) + 10, "%s udp", address);
+	}
 
 	if (drvAsynIPPortConfigure(address, adds, 0, 0, 0) == 0)
 	{
-		return finsInit(portName, address, FINS_SOURCE_ADDR);
+		return finsInit(portName, address, (node == 0) ? FINS_SOURCE_ADDR : node);
 	}
 
 	return (-1);
@@ -228,9 +227,7 @@ int finsUDPInit(const char *portName, const char *address)
 
 int finsTCPInit(const char *portName, const char *address)
 {
-	char *adds;
-
-    adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
+	char *adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
 
 	if(strchr(address, ':') == NULL)
 	{
@@ -467,7 +464,7 @@ static int finsInit(const char *portName, const char *dev, const int snode)
 	}
 	else if (pdrvPvt->type == FINS_UDP_type)
 	{
-		pdrvPvt->snode = (snode != 0) ? snode : FINS_SOURCE_ADDR;
+		pdrvPvt->snode = snode;
 	}
 	
  	return (0);
@@ -804,6 +801,22 @@ static int BuildReadMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const s
 		
 			break;
 		}
+
+		case FINS_ECHO_TEST:
+		{
+			pdrvPvt->mrc = 0x08;
+			pdrvPvt->src = 0x01;
+			
+			pdrvPvt->message[COM + 0] = pdrvPvt->snode;
+			pdrvPvt->message[COM + 1] = pdrvPvt->snode;
+			pdrvPvt->message[COM + 2] = pdrvPvt->snode;
+			pdrvPvt->message[COM + 3] = pdrvPvt->snode;
+			
+			*sendlen = COM + 4;
+			*recvlen = RESP + sizeof(epicsUInt32);
+		
+			break;
+		}	
 		
 		case FINS_MM_READ:
 		{
@@ -1221,7 +1234,16 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 
 			break;
 		}
-		
+
+		case FINS_ECHO_TEST:
+		{
+			const epicsInt32 *rep = (epicsInt32 *) &pdrvPvt->message[RESP + 0];
+
+			*(epicsInt32 *)(data) = BSWAP32(*rep);
+			
+			break;
+		}
+				
 		case FINS_MM_READ:
 		{
 			int i;
@@ -1694,6 +1716,7 @@ static asynStatus ReadInt32(void *pvt, asynUser *pasynUser, epicsInt32 *value)
 		case FINS_CPU_MODE:
 		case FINS_CPU_FATAL:
 		case FINS_CPU_NONFATAL:
+		case FINS_ECHO_TEST:
 		{
 			break;
 		}
@@ -2450,6 +2473,11 @@ static asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvI
 			pasynUser->reason = FINS_EXPLICIT;
 		}
 		else
+		if (strcmp("FINS_ECHO_TEST", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_ECHO_TEST;
+		}
+		else
 		{
 			pasynUser->reason = FINS_NULL;
 		}
@@ -2651,13 +2679,14 @@ epicsExportRegistrar(finsDEVRegister);
 
 static const iocshArg finsUDPInitArg0 = { "port name", iocshArgString };
 static const iocshArg finsUDPInitArg1 = { "IP address", iocshArgString };
+static const iocshArg finsUDPInitArg2 = { "Host node number", iocshArgInt };
 
-static const iocshArg *finsUDPInitArgs[] = { &finsUDPInitArg0, &finsUDPInitArg1};
-static const iocshFuncDef finsUDPInitFuncDef = { "finsUDPInit", 2, finsUDPInitArgs};
+static const iocshArg *finsUDPInitArgs[] = { &finsUDPInitArg0, &finsUDPInitArg1, &finsUDPInitArg2};
+static const iocshFuncDef finsUDPInitFuncDef = { "finsUDPInit", 3, finsUDPInitArgs};
 
 static void finsUDPInitCallFunc(const iocshArgBuf *args)
 {
-	finsUDPInit(args[0].sval, args[1].sval);
+	finsUDPInit(args[0].sval, args[1].sval, args[2].ival);
 }
 
 static void finsUDPRegister(void)

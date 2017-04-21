@@ -520,3 +520,12 @@ record(bo, "$(device):FORCE:RESET")
 	field(OUT,  "@asyn($(port), 0, 0) FINS_SET_RESET_CANCEL")
 	field(HIGH, "0.1")
 }
+
+#---------------------------------------------------------------------------------------------------
+
+record(longin, "$(device):ECHOTEST")
+{
+	field(DESC, "PLC returns nodes number")
+	field(DTYP, "asynInt32")
+	field(INP,  "@asyn($(port), 0, 0) FINS_ECHO_TEST")
+}
