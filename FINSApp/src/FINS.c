@@ -207,7 +207,7 @@ int finsUDPInit(const char *portName, const char *address, const int node)
 {
 	char *adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
 
-	if(strchr(address, ':') == NULL)
+	if (strchr(address, ':') == NULL)
 	{
 		// no port provided - default to 9600
 		epicsSnprintf(adds, strlen(address) + 10, "%s:9600 udp", address);
@@ -229,7 +229,7 @@ int finsTCPInit(const char *portName, const char *address)
 {
 	char *adds = (char *) callocMustSucceed(1, strlen(address) + 10, __func__);
 
-	if(strchr(address, ':') == NULL)
+	if (strchr(address, ':') == NULL)
 	{
 	    // no port provided - default to 9600
 	    epicsSnprintf(adds, strlen(address) + 10, "%s:9600 tcp", address);
@@ -272,6 +272,9 @@ static void AddCommand(drvPvt * const pdrvPvt, const size_t sendlen, const unsig
 }
 
 /**************************************************************************************************/
+/*
+	For TCP connections we need to request a node number from the PLC.
+*/
 
 static int FINSnodeRequest(drvPvt * const pdrvPvt)
 {
@@ -2511,7 +2514,7 @@ static void FINSerror(const drvPvt * const pdrvPvt, asynUser *pasynUser, const c
 {
 	if (mres & 0x80)
 	{
-		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Relay Error Flag\n", name, pdrvPvt->portName);
+		asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: port %s, Relay Error Flag\n", __func__, pdrvPvt->portName);
 		
 		FINSerror(pdrvPvt, pasynUser, name, mres ^ 0x80, sres);
 	}
