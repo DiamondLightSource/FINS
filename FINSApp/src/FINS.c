@@ -467,7 +467,7 @@ static int finsInit(const char *portName, const char *dev, const int snode)
 	}
 	else if (pdrvPvt->type == FINS_UDP_type)
 	{
-		pdrvPvt->snode = snode;
+		pdrvPvt->snode = (snode != 0) ? snode : FINS_SOURCE_ADDR;
 	}
 	
  	return (0);
