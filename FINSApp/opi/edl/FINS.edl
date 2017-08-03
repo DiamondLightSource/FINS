@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 547
-y 260
+x 494
+y 285
 w 430
 h 610
 font "arial-medium-r-18.0"
@@ -141,9 +141,8 @@ w 110
 h 20
 controlPv "$(device):MODEL:CPU"
 font "courier-medium-r-12.0"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -163,9 +162,8 @@ w 110
 h 20
 controlPv "$(device):MODEL:ETN"
 font "courier-medium-r-12.0"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -185,9 +183,8 @@ w 110
 h 20
 controlPv "$(device):MODE"
 font "courier-medium-r-12.0"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -208,9 +205,8 @@ h 20
 controlPv "$(device):CYCLE:MEAN"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -231,9 +227,8 @@ h 20
 controlPv "$(device):CYCLE:MAX"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -254,9 +249,8 @@ h 20
 controlPv "$(device):CYCLE:MIN"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -277,9 +271,8 @@ h 20
 controlPv "$(device):UNITS"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -300,9 +293,8 @@ h 20
 controlPv "$(device):POWERINTS"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -323,9 +315,8 @@ h 20
 controlPv "$(device):POWERON"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -518,9 +509,8 @@ controlPv "$(device):CLOCK:YEAR"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 newPos
@@ -541,9 +531,8 @@ controlPv "$(device):CLOCK:MON"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 newPos
@@ -564,9 +553,8 @@ controlPv "$(device):CLOCK:DAY"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 newPos
@@ -587,9 +575,8 @@ controlPv "$(device):CLOCK:HOUR"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 fieldLen "2"
 nullColor index 0
@@ -611,9 +598,8 @@ controlPv "$(device):CLOCK:MIN"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 newPos
@@ -634,9 +620,8 @@ controlPv "$(device):CLOCK:SEC"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 fieldLen "2"
 nullColor index 0
@@ -774,9 +759,8 @@ h 20
 controlPv "$(device):PLCTYPE"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -798,9 +782,8 @@ controlPv "$(device):SOFTWARE"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 newPos
@@ -820,9 +803,8 @@ h 20
 controlPv "$(device):SERIALID"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 useHexPrefix
@@ -960,9 +942,8 @@ controlPv "$(device):START:DAYS"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 newPos
@@ -983,9 +964,8 @@ controlPv "$(device):START:HOUR"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 fieldLen "2"
 nullColor index 0
@@ -1007,9 +987,8 @@ controlPv "$(device):START:MINS"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 nullColor index 0
 newPos
@@ -1030,9 +1009,8 @@ controlPv "$(device):START:SECS"
 format "hex"
 font "courier-medium-r-12.0"
 fontAlign "right"
-fgColor index 18
-bgColor index 11
-useDisplayBg
+fgColor index 16
+bgColor index 10
 limitsFromDb
 fieldLen "2"
 nullColor index 0
