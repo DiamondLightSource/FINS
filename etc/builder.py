@@ -12,6 +12,31 @@ class FINS(Device):
 class FINSPort(AsynPort):
     pass
 
+class FINSTCPInit(FINSPort):
+    """This creates an asyn port which communicates with a FINS device over
+    UDP"""
+    Dependencies = (FINS,)
+    
+    def __init__(self, ip, name, simulation=None, **args):
+        self.__super.__init__(name)
+        self.ip = ip
+        self.simulation = simulation
+
+    def Initialise(self):
+        print '# finsTCPInit(asyn_port, ip_addr)'    
+        print 'finsTCPInit("%(asyn_name)s", "%(ip)s")' % self.__dict__
+        
+    ArgInfo = makeArgInfo(__init__,    
+        ip = Simple("IP port of FINS device"),
+        name = Simple("Asyn port name"),
+        simulation = Simple("IP port of simulation device"))  
+
+def FINSTCPInitSim(ip, name, simulation=None, FINSTCPInit=FINSTCPInit, **kwargs):
+    if simulation:
+        return FINSTCPInit(simulation, name, **kwargs)
+
+SetSimulation(FINSTCPInit, FINSTCPInitSim)
+
 class FINSUDPInit(FINSPort):
     """This creates an asyn port which communicates with a FINS device over
     UDP"""
