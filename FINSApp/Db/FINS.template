@@ -1,11 +1,11 @@
 # FINS default template
 #
-# This template provides some basic CPU information
+# % macro, __doc__, This template provides some basic CPU information
 #
-# macros:
-# device	record device name
-# etn		PLC Ethernet module address, default 0x10
-# port	asyn port name
+# Macros:
+# % macro, device, record device name
+# % macro, port, asyn port name
+# % macro, etn, PLC Ethernet module address (Default = 0x10)
 
 #---------------------------------------------------------------------------------------------------
 
