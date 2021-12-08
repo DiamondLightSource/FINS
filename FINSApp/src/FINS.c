@@ -1042,7 +1042,8 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 
 	if (pdrvPvt->type == FINS_TCP_type)
 	{
-		const unsigned int ferror = BSWAP32(((unsigned int *) pdrvPvt->message)[FINS_MODE_ERROR]);
+		unsigned int const * const fins_mode_error_message = (unsigned int *)(void *) pdrvPvt->message;
+		const unsigned int ferror = BSWAP32(fins_mode_error_message[FINS_MODE_ERROR]);
 		 
 		if (ferror != FINS_ERROR_NORMAL) 
 		{
@@ -1564,7 +1565,8 @@ static int finsWrite(drvPvt * const pdrvPvt, asynUser *pasynUser, const void *da
 
 	if (pdrvPvt->type == FINS_TCP_type)
 	{
-		const unsigned int ferror = BSWAP32(((unsigned int *) pdrvPvt->message)[FINS_MODE_ERROR]);
+		unsigned int const * const fins_mode_error_message = (unsigned int *)(void *) pdrvPvt->message;
+		const unsigned int ferror = BSWAP32(fins_mode_error_message[FINS_MODE_ERROR]);
 		 
 		if (ferror != FINS_ERROR_NORMAL) 
 		{
