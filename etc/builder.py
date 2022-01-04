@@ -14,7 +14,7 @@ class FINSPort(AsynPort):
 
 class FINSTCPInit(FINSPort):
     """This creates an asyn port which communicates with a FINS device over
-    UDP"""
+    TCP"""
     Dependencies = (FINS,)
     
     def __init__(self, ip, name, simulation=None, **args):
