@@ -45,6 +45,7 @@
 		r	FINS_IO_READ
 		r	FINS_CLOCK_READ
 		r	FINS_MM_READ
+		r	FINS_EMx_READ
 		w	FINS_DM_WRITE
 		w	FINS_AR_WRITE
 		w	FINS_IO_WRITE
@@ -637,6 +638,7 @@ static int BuildReadMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const s
 		case FINS_IO_READ:
 		case FINS_WR_READ:
 		case FINS_HR_READ:
+		case FINS_EM0_READ ... FINS_EMF_READ:
 		case FINS_DM_WRITE:
 		case FINS_AR_WRITE:
 		case FINS_IO_WRITE:
@@ -678,6 +680,102 @@ static int BuildReadMessage(drvPvt * const pdrvPvt, asynUser *pasynUser, const s
 				case FINS_HR_READ:
 				{
 					pdrvPvt->message[COM] = HR;
+					break;
+				}
+				
+				case FINS_EM0_READ:
+				{
+					pdrvPvt->message[COM] = E0;
+					break;
+				}
+				
+				case FINS_EM1_READ:
+				{
+					pdrvPvt->message[COM] = E1;
+					break;
+				}
+				
+				case FINS_EM2_READ:
+				{
+					pdrvPvt->message[COM] = E2;
+					break;
+				}
+				
+				case FINS_EM3_READ:
+				{
+					pdrvPvt->message[COM] = E3;
+					break;
+				}
+				
+				case FINS_EM4_READ:
+				{
+					pdrvPvt->message[COM] = E4;
+					break;
+				}
+				
+				case FINS_EM5_READ:
+				{
+					pdrvPvt->message[COM] = E5;
+					break;
+				}
+				
+				case FINS_EM6_READ:
+				{
+					pdrvPvt->message[COM] = E6;
+					break;
+				}
+				
+				case FINS_EM7_READ:
+				{
+					pdrvPvt->message[COM] = E7;
+					break;
+				}
+				
+				case FINS_EM8_READ:
+				{
+					pdrvPvt->message[COM] = E8;
+					break;
+				}
+				
+				case FINS_EM9_READ:
+				{
+					pdrvPvt->message[COM] = E9;
+					break;
+				}
+				
+				case FINS_EMA_READ:
+				{
+					pdrvPvt->message[COM] = EA;
+					break;
+				}
+				
+				case FINS_EMB_READ:
+				{
+					pdrvPvt->message[COM] = EB;
+					break;
+				}
+				
+				case FINS_EMC_READ:
+				{
+					pdrvPvt->message[COM] = EC;
+					break;
+				}
+				
+				case FINS_EMD_READ:
+				{
+					pdrvPvt->message[COM] = ED;
+					break;
+				}
+				
+				case FINS_EME_READ:
+				{
+					pdrvPvt->message[COM] = EE;
+					break;
+				}
+				
+				case FINS_EMF_READ:
+				{
+					pdrvPvt->message[COM] = EF;
 					break;
 				}
 				
@@ -1069,6 +1167,7 @@ static int finsRead(drvPvt * const pdrvPvt, asynUser *pasynUser, void *data, con
 		case FINS_IO_READ:
 		case FINS_WR_READ:
 		case FINS_HR_READ:
+		case FINS_EM0_READ ... FINS_EMF_READ:
 		case FINS_DM_WRITE:
 		case FINS_AR_WRITE:
 		case FINS_IO_WRITE:
@@ -1956,6 +2055,7 @@ static asynStatus ReadInt16Array(void *pvt, asynUser *pasynUser, epicsInt16 *val
 		case FINS_IO_READ:
 		case FINS_WR_READ:
 		case FINS_HR_READ:
+		case FINS_EM0_READ ... FINS_EMF_READ:
 		{
 			if (((pdrvPvt->type == FINS_UDP_type) && (nelements > FINS_MAX_UDP_WORDS)) || ((pdrvPvt->type == FINS_TCP_type) && (nelements > FINS_MAX_TCP_WORDS)) || ((pdrvPvt->type == HOSTLINK_type) && (nelements > FINS_MAX_HOST_WORDS)))
 			{
@@ -2480,6 +2580,86 @@ static asynStatus drvUserCreate(void *pvt, asynUser *pasynUser, const char *drvI
 		{
 			pasynUser->reason = FINS_ECHO_TEST;
 		}
+		else
+		if (strcmp("FINS_EM0_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EM0_READ;
+		}
+		else
+		if (strcmp("FINS_EM1_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EM1_READ;
+		}
+		else
+		if (strcmp("FINS_EM2_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EM2_READ;
+		}
+		else
+		if (strcmp("FINS_EM3_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EM3_READ;
+		}
+		else
+		if (strcmp("FINS_EM4_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EM4_READ;
+		}
+		else
+		if (strcmp("FINS_EM5_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EM5_READ;
+		}
+		else
+		if (strcmp("FINS_EM6_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EM6_READ;
+		}
+		else
+		if (strcmp("FINS_EM7_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EM7_READ;
+		}
+		else
+		if (strcmp("FINS_EM8_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EM8_READ;
+		}
+		else
+		if (strcmp("FINS_EM9_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EM9_READ;
+		}
+		else
+		if (strcmp("FINS_EMA_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EMA_READ;
+		}
+		else
+		if (strcmp("FINS_EMB_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EMB_READ;
+		}
+		else
+		if (strcmp("FINS_EMC_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EMC_READ;
+		}
+		else
+		if (strcmp("FINS_EMD_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EMD_READ;
+		}
+		else
+		if (strcmp("FINS_EME_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EME_READ;
+		}
+		else
+		if (strcmp("FINS_EMF_READ", drvInfo) == 0)
+		{
+			pasynUser->reason = FINS_EMF_READ;
+		}		
 		else
 		{
 			pasynUser->reason = FINS_NULL;
