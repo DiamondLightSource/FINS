@@ -41,6 +41,7 @@ Int16Array
 r	FINS_DM_READ		16 bit array Data Memory read
 r	FINS_AR_READ		16 bit array Auxillary Memory read
 r	FINS_IO_READ		16 bit array I/O Area read
+r	FINS_EMx_READ		16 bit array EM block x=0-F
 r	FINS_CLOCK_READ		PLC clock/date read (7 * SHORT)
 w	FINS_DM_WRITE		16 bit array Data Memory write	
 w	FINS_AR_WRITE		16 bit array Auxillary Memory write

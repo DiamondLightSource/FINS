@@ -10,6 +10,22 @@
 #define CF	0x09	/* counter completion flags */
 #define TF	0x09	/* time completion flags */
 #define CP	0x07	/* clock pulses */
+#define E0	0xA0	/* EM bank 0 */
+#define E1	0xA1
+#define E2	0xA2	/* EM bank 2 */
+#define E3	0xA3
+#define E4	0xA4	/* EM bank 4 */
+#define E5	0xA5
+#define E6	0xA6	/* EM bank 6 */
+#define E7	0xA7
+#define E8	0xA8	/* EM bank 8 */
+#define E9	0xA9
+#define EA	0xAA	/* EM bank 10 */
+#define EB	0xAB
+#define EC	0xAC	/* EM bank 12 */
+#define ED	0xAD
+#define EE	0xAE	/* EM bank 14 */
+#define EF	0xAF
 
 /* offsets into the FINS UDP packet */
 
@@ -107,6 +123,10 @@ enum FINS_COMMANDS
 	FINS_IO_READ_32, FINS_IO_WRITE_32, FINS_IO_WRITE_32_NOREAD,
 	FINS_AR_READ_32, FINS_AR_WRITE_32, FINS_AR_WRITE_32_NOREAD,
 	FINS_CT_READ_32, FINS_CT_WRITE_32, FINS_CT_WRITE_32_NOREAD,
+	FINS_EM0_READ, FINS_EM1_READ, FINS_EM2_READ, FINS_EM3_READ,
+	FINS_EM4_READ, FINS_EM5_READ, FINS_EM6_READ, FINS_EM7_READ,
+	FINS_EM8_READ, FINS_EM9_READ, FINS_EMA_READ, FINS_EMB_READ,
+	FINS_EMC_READ, FINS_EMD_READ, FINS_EME_READ, FINS_EMF_READ,
 	FINS_READ_MULTI,
 	FINS_WRITE_MULTI,
 	FINS_SET_MULTI_TYPE,
@@ -142,6 +162,10 @@ static const char * const FINS_names[] = {
 	"FINS_IO_READ_32", "FINS_IO_WRITE_32", "FINS_IO_WRITE_32_NOREAD",
 	"FINS_AR_READ_32", "FINS_AR_WRITE_32", "FINS_AR_WRITE_32_NOREAD",
 	"FINS_CT_READ_32", "FINS_CT_WRITE_32", "FINS_CT_WRITE_32_NOREAD",
+	"FINS_EM0_READ", "FINS_EM1_READ", "FINS_EM2_READ", "FINS_EM3_READ", 
+	"FINS_EM4_READ", "FINS_EM5_READ", "FINS_EM6_READ", "FINS_EM7_READ", 
+	"FINS_EM8_READ", "FINS_EM9_READ", "FINS_EMA_READ", "FINS_EMB_READ",
+	"FINS_EMC_READ", "FINS_EMD_READ", "FINS_EME_READ", "FINS_EMF_READ", 
 	"FINS_READ_MULTI",
 	"FINS_WRITE_MULTI",
 	"FINS_SET_MULTI_TYPE",
