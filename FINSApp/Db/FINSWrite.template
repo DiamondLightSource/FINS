@@ -7,7 +7,7 @@
 # % PORT, asyn port name
 # % ADDR, DM area address
 
-record(ao, "$(P):DMWRITE")
+record(ao, "$(P):DMWRITE$(ADDR)")
 {
 	field(DTYP, "asynInt32")
 	field(OUT,  "@asyn($(PORT), $(ADDR), 0) FINS_DM_WRITE")
