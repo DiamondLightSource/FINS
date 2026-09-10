@@ -1,0 +1,14 @@
+# FINS DM Write record template
+#
+# % P, __doc__, This template creates a FINS DM area write record
+#
+# Macros:
+# % P, device prefix
+# % PORT, asyn port name
+# % ADDR, DM area address
+
+record(ao, "$(P):DMWRITE")
+{
+	field(DTYP, "asynInt32")
+	field(OUT,  "@asyn($(PORT), $(ADDR), 0) FINS_DM_WRITE")
+}
