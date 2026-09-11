@@ -4,6 +4,7 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
 DB += FINS.template
+DB += FINSWrite.template
 
 include $(TOP)/configure/RULES
 #----------------------------------------
